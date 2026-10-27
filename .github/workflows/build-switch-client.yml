@@ -1,4 +1,4 @@
-name: Build & Package Prelude Switch Client
+name: Build & Package HorizonLink Switch Client
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       server_host:
-        description: 'Server Host / Domain rann-labs'
+        description: 'Server Host / Domain HorizonLink'
         required: true
         default: 'switch.rann-labs.com'
       server_ip:
@@ -21,7 +21,7 @@ on:
 
 jobs:
   build-switch-client:
-    name: Build Prelude NRO & SD Package
+    name: Build HorizonLink NRO & SD Package
     runs-on: ubuntu-latest
     container:
       image: devkitpro/devkita64:latest
@@ -42,7 +42,7 @@ jobs:
           TARGET_SERVER_IP="${{ github.event.inputs.server_ip || '103.x.x.1' }}"
           TARGET_NAT_IP="${{ github.event.inputs.nat_ip || '103.x.x.2' }}"
 
-          echo "Mengompilasi Prelude.nro dengan target host: $TARGET_HOST"
+          echo "Mengompilasi HorizonLink.nro dengan target host: $TARGET_HOST"
           make clean || true
           make -j$(nproc) CFLAGS="-DNEXTENDO_SERVER_HOST=\\\"$TARGET_HOST\\\" -DNEXTENDO_SERVER_IP_NNCSD2=\\\"$TARGET_NAT_IP\\\""
 
@@ -52,9 +52,9 @@ jobs:
           mkdir -p release_package/atmosphere/hosts
 
           # Salin NRO homebrew
-          cp prelude-src/Prelude.nro release_package/switch/Prelude-RannLabs.nro
+          cp prelude-src/Prelude.nro release_package/switch/HorizonLink.nro
 
-          # Generate emummc.txt DNS.mitm dengan IP rann-labs
+          # Generate emummc.txt DNS.mitm dengan IP server
           TARGET_SERVER_IP="${{ github.event.inputs.server_ip || '103.x.x.1' }}"
           TARGET_NAT_IP="${{ github.event.inputs.nat_ip || '103.x.x.2' }}"
 
@@ -62,10 +62,10 @@ jobs:
           cp release_package/atmosphere/hosts/emummc.txt release_package/atmosphere/hosts/sysmmc.txt
 
           cd release_package
-          zip -r ../Nextendo-RannLabs-SDCard.zip .
+          zip -r ../HorizonLink-Switch-SDCard.zip .
 
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Nextendo-RannLabs-SDCard
-          path: Nextendo-RannLabs-SDCard.zip
+          name: HorizonLink-Switch-SDCard
+          path: HorizonLink-Switch-SDCard.zip
