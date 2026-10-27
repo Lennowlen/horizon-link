@@ -1,0 +1,71 @@
+name: Build & Package Prelude Switch Client
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      server_host:
+        description: 'Server Host / Domain rann-labs'
+        required: true
+        default: 'switch.rann-labs.com'
+      server_ip:
+        description: 'Public Server IP (SERVER_IP)'
+        required: true
+        default: '103.x.x.1'
+      nat_ip:
+        description: 'Public NAT IP (NAT_IP - vantage point ke-2)'
+        required: false
+        default: '103.x.x.2'
+
+jobs:
+  build-switch-client:
+    name: Build Prelude NRO & SD Package
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkita64:latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Clone Prelude-Nextendo Source
+        run: |
+          git clone https://github.com/NextendoNetwork/Prelude-Nextendo.git prelude-src
+          cd prelude-src
+          
+          # Install dependensi libnx yang dibutuhkan Prelude
+          dkp-pacman -Syu --noconfirm switch-freetype switch-mpg123
+
+          TARGET_HOST="${{ github.event.inputs.server_host || 'switch.rann-labs.com' }}"
+          TARGET_SERVER_IP="${{ github.event.inputs.server_ip || '103.x.x.1' }}"
+          TARGET_NAT_IP="${{ github.event.inputs.nat_ip || '103.x.x.2' }}"
+
+          echo "Mengompilasi Prelude.nro dengan target host: $TARGET_HOST"
+          make clean || true
+          make -j$(nproc) CFLAGS="-DNEXTENDO_SERVER_HOST=\\\"$TARGET_HOST\\\" -DNEXTENDO_SERVER_IP_NNCSD2=\\\"$TARGET_NAT_IP\\\""
+
+      - name: Assemble MicroSD Package Structure
+        run: |
+          mkdir -p release_package/switch
+          mkdir -p release_package/atmosphere/hosts
+
+          # Salin NRO homebrew
+          cp prelude-src/Prelude.nro release_package/switch/Prelude-RannLabs.nro
+
+          # Generate emummc.txt DNS.mitm dengan IP rann-labs
+          TARGET_SERVER_IP="${{ github.event.inputs.server_ip || '103.x.x.1' }}"
+          TARGET_NAT_IP="${{ github.event.inputs.nat_ip || '103.x.x.2' }}"
+
+          sed "s/%SERVER_IP%/$TARGET_SERVER_IP/g; s/%NAT_IP%/$TARGET_NAT_IP/g" emummc.template.txt > release_package/atmosphere/hosts/emummc.txt
+          cp release_package/atmosphere/hosts/emummc.txt release_package/atmosphere/hosts/sysmmc.txt
+
+          cd release_package
+          zip -r ../Nextendo-RannLabs-SDCard.zip .
+
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nextendo-RannLabs-SDCard
+          path: Nextendo-RannLabs-SDCard.zip

@@ -1,0 +1,60 @@
+name: Deploy to Rann-Labs Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Docker Stack to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH & Deploy to Rann-Labs
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.RANN_LABS_HOST }}
+          username: ${{ secrets.RANN_LABS_USER }}
+          key: ${{ secrets.RANN_LABS_SSH_KEY }}
+          port: ${{ secrets.RANN_LABS_PORT || 22 }}
+          script: |
+            set -e
+            echo "🚀 Menyiapkan direktori deployment di rann-labs..."
+            DEPLOY_DIR="/opt/nextendo-rannlabs"
+            sudo mkdir -p "$DEPLOY_DIR"
+            sudo chown -R $USER:$USER "$DEPLOY_DIR"
+            
+            # Sinkronisasi repo jika sudah ada git remote, atau pull kode terbaru
+            if [ -d "$DEPLOY_DIR/.git" ]; then
+              cd "$DEPLOY_DIR"
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              git clone https://github.com/${{ github.repository }}.git "$DEPLOY_DIR"
+              cd "$DEPLOY_DIR"
+            fi
+
+            # Siapkan .env jika belum ada
+            if [ ! -f .env ]; then
+              echo "Membuat file .env awal dari secrets..."
+              cp .env.example .env
+              sed -i "s|SERVER_IP=.*|SERVER_IP=${{ secrets.RANN_LABS_SERVER_IP }}|g" .env
+              sed -i "s|NAT_IP=.*|NAT_IP=${{ secrets.RANN_LABS_NAT_IP || secrets.RANN_LABS_SERVER_IP }}|g" .env
+              sed -i "s|NEXTENDO_BASE_URL=.*|NEXTENDO_BASE_URL=${{ secrets.NEXTENDO_BASE_URL || 'https://switch.rann-labs.com' }}|g" .env
+              sed -i "s|NEXTENDO_SECRET=.*|NEXTENDO_SECRET=${{ secrets.NEXTENDO_SECRET }}|g" .env
+              sed -i "s|NEXTENDO_INTERNAL_KEY=.*|NEXTENDO_INTERNAL_KEY=${{ secrets.NEXTENDO_INTERNAL_KEY }}|g" .env
+              sed -i "s|NEXTENDO_SECURE_PASSWORD=.*|NEXTENDO_SECURE_PASSWORD=${{ secrets.NEXTENDO_SECURE_PASSWORD }}|g" .env
+            fi
+
+            echo "🐳 Menjalankan Docker Compose di rann-labs..."
+            docker compose down --remove-orphans || true
+            docker compose build --pull
+            docker compose up -d
+
+            echo "✅ Deployment rann-labs berhasil aktif!"
+            docker compose ps

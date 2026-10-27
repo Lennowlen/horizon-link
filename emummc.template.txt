@@ -1,0 +1,39 @@
+# atmosphere/hosts/emummc.txt
+# File pemetaan DNS.mitm Atmosphere untuk Switch Online Private Server
+# Catatan penting: Atmosphere mengevaluasi baris dari atas ke bawah (last match wins).
+
+# ==============================================================================
+# 1. Block Official Telemetry & Ban Report Endpoints (Sink ke Server untuk HTTP 200)
+# JANGAN di-null route ke 127.0.0.1 agar Applet NSO (0100000000000816) tidak hang/freeze!
+# ==============================================================================
+%SERVER_IP% receive-lp1.dg.srv.nintendo.net
+%SERVER_IP% receive-lp1.er.srv.nintendo.net
+%SERVER_IP% aqua.hac.lp1.dauth.nintendo.net
+%SERVER_IP% sun.hac.lp1.dauth.nintendo.net
+
+# ==============================================================================
+# 2. Connection Test (Conntest & CTest)
+# Diarahkan ke nginx server yang mengembalikan header X-Organization: Nintendo & HTTP 200
+# ==============================================================================
+%SERVER_IP% ctest.cdn.nintendo.net
+%SERVER_IP% conntest.nintendowifi.net
+
+# ==============================================================================
+# 3. Nintendo Account, BAAS, & Device Auth
+# ==============================================================================
+%SERVER_IP% e0d421375d3151cf.baas.nintendo.com
+%SERVER_IP% dauth-lp1.ndas.srv.nintendo.net
+%SERVER_IP% aauth-lp1.ndas.srv.nintendo.net
+
+# ==============================================================================
+# 4. Game Server Core & NEX Services (MK8 DX, SSBU, Splatoon 2)
+# ==============================================================================
+%SERVER_IP% lp1.ncp.nintendo.net
+%SERVER_IP% g-0100152000022000-lp1.n.n.srv.nintendo.net
+
+# ==============================================================================
+# 5. Dual Vantage Point NAT-Check (Nintendo Pia Traversal)
+# Wajib menggunakan 2 IP berbeda untuk menghindari error 2618-201
+# ==============================================================================
+%SERVER_IP% nncs1.app.nintendo.net
+%NAT_IP% nncs2.app.nintendo.net
