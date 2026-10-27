@@ -35,9 +35,6 @@ jobs:
           git clone https://github.com/NextendoNetwork/Prelude-Nextendo.git prelude-src
           cd prelude-src
 
-          # Install dependensi switch libnx yang dibutuhkan
-          dkp-pacman -Syu --noconfirm libnx switch-freetype switch-mpg123 switch-libpng switch-bzip2 switch-zlib
-
           TARGET_HOST="${{ github.event.inputs.server_host || 'horizon.rann.web.id' }}"
           TARGET_SERVER_IP="${{ github.event.inputs.server_ip || '43.156.117.131' }}"
           TARGET_NAT_IP="${{ github.event.inputs.nat_ip || '43.156.117.131' }}"
