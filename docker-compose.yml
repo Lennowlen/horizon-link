@@ -89,10 +89,14 @@ services:
       - account
     networks:
       - nextendo-net
+      - ut-network
 
 networks:
   nextendo-net:
     driver: bridge
+  ut-network:
+    external: true
+    name: ut-tracker_ut-network
 
 volumes:
   account-data:
