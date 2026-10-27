@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # 1. SNI Router: Passthrough TLS ke masing-masing auth server tanpa membuka sertifikat
   sni-router:
@@ -7,7 +5,7 @@ services:
     container_name: nextendo-sni-router
     restart: unless-stopped
     ports:
-      - "443:443"
+      - "${SNI_ROUTER_PORT:-8443}:443"
     environment:
       - MK8_AUTH=mk8:443
       - SSBU_AUTH=ssbu:443
@@ -60,12 +58,11 @@ services:
     container_name: nextendo-nncs
     restart: unless-stopped
     environment:
-      - NNCS_SERVER_IP=${SERVER_PUBLIC_IP}
+      - NNCS_SERVER_IP=${SERVER_IP}
     network_mode: host
     command: sh -c "apk add --no-cache git && git clone https://github.com/NextendoNetwork/nextendo-nncs.git /app && cd /app && go build -o /app/server . && /app/server"
 
   # 5. Nginx Gateway & Conntest Handler (Connection Test & Telemetry Sink)
-  # Menggunakan port internal/custom jika port 80 host sudah dipakai webserver lain di VPS
   nginx-gateway:
     image: nginx:alpine
     container_name: nextendo-nginx-gateway

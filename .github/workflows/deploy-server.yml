@@ -49,6 +49,8 @@ jobs:
             sed -i "s|NEXTENDO_SECRET=.*|NEXTENDO_SECRET=${{ secrets.NEXTENDO_SECRET }}|g" .env
             sed -i "s|NEXTENDO_INTERNAL_KEY=.*|NEXTENDO_INTERNAL_KEY=${{ secrets.NEXTENDO_INTERNAL_KEY }}|g" .env
             sed -i "s|NEXTENDO_SECURE_PASSWORD=.*|NEXTENDO_SECURE_PASSWORD=${{ secrets.NEXTENDO_SECURE_PASSWORD }}|g" .env
+            echo "CONNTEST_PORT=${{ secrets.CONNTEST_PORT || '8088' }}" >> .env
+            echo "SNI_ROUTER_PORT=${{ secrets.SNI_ROUTER_PORT || '8443' }}" >> .env
 
             echo "🐳 Menjalankan Docker Compose di rann-labs..."
             echo '${{ secrets.RANN_LABS_PASSWORD }}' | sudo -S docker compose down --remove-orphans || true
