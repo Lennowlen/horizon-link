@@ -9,15 +9,15 @@ on:
       server_host:
         description: 'Server Host / Domain HorizonLink'
         required: true
-        default: 'switch.rann-labs.com'
+        default: 'horizon.rann.web.id'
       server_ip:
         description: 'Public Server IP (SERVER_IP)'
         required: true
-        default: '103.x.x.1'
+        default: '43.156.117.131'
       nat_ip:
         description: 'Public NAT IP (NAT_IP - vantage point ke-2)'
         required: false
-        default: '103.x.x.2'
+        default: '43.156.117.131'
 
 jobs:
   build-switch-client:
@@ -30,33 +30,44 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Clone Prelude-Nextendo Source
+      - name: Build Prelude NRO
         run: |
           git clone https://github.com/NextendoNetwork/Prelude-Nextendo.git prelude-src
           cd prelude-src
-          
-          # Install dependensi libnx yang dibutuhkan Prelude
-          dkp-pacman -Syu --noconfirm switch-freetype switch-mpg123
 
-          TARGET_HOST="${{ github.event.inputs.server_host || 'switch.rann-labs.com' }}"
-          TARGET_SERVER_IP="${{ github.event.inputs.server_ip || '103.x.x.1' }}"
-          TARGET_NAT_IP="${{ github.event.inputs.nat_ip || '103.x.x.2' }}"
+          # Install dependensi switch libnx yang dibutuhkan
+          dkp-pacman -Syu --noconfirm libnx switch-freetype switch-mpg123 switch-libpng switch-bzip2 switch-zlib
+
+          TARGET_HOST="${{ github.event.inputs.server_host || 'horizon.rann.web.id' }}"
+          TARGET_SERVER_IP="${{ github.event.inputs.server_ip || '43.156.117.131' }}"
+          TARGET_NAT_IP="${{ github.event.inputs.nat_ip || '43.156.117.131' }}"
 
           echo "Mengompilasi HorizonLink.nro dengan target host: $TARGET_HOST"
+          
+          # Setup devkitPro environment flags
+          export DEVKITPRO=/opt/devkitpro
+          export DEVKITA64=/opt/devkitpro/devkitA64
+          export LIBNX=/opt/devkitpro/libnx
+          export PORTLIBS=/opt/devkitpro/portlibs/switch
+          export PATH=$DEVKITA64/bin:$DEVKITPRO/tools/bin:$PATH
+
+          # Ganti konstanta server host di source code jika ada
+          find source/ -type f \( -name "*.c" -o -name "*.h" \) -exec sed -i "s|nextendo.network|$TARGET_HOST|g" {} +
+
           make clean || true
-          make -j$(nproc) CFLAGS="-DNEXTENDO_SERVER_HOST=\\\"$TARGET_HOST\\\" -DNEXTENDO_SERVER_IP_NNCSD2=\\\"$TARGET_NAT_IP\\\""
+          make -j$(nproc) DEFINES="-DNEXTENDO_SERVER_HOST=\\\"$TARGET_HOST\\\" -DNEXTENDO_SERVER_IP_NNCSD2=\\\"$TARGET_NAT_IP\\\""
 
       - name: Assemble MicroSD Package Structure
         run: |
           mkdir -p release_package/switch
           mkdir -p release_package/atmosphere/hosts
 
-          # Salin NRO homebrew
-          cp prelude-src/Prelude.nro release_package/switch/HorizonLink.nro
+          # Salin NRO homebrew hasil build
+          cp prelude-src/nextendo.nro release_package/switch/HorizonLink.nro
 
           # Generate emummc.txt DNS.mitm dengan IP server
-          TARGET_SERVER_IP="${{ github.event.inputs.server_ip || '103.x.x.1' }}"
-          TARGET_NAT_IP="${{ github.event.inputs.nat_ip || '103.x.x.2' }}"
+          TARGET_SERVER_IP="${{ github.event.inputs.server_ip || '43.156.117.131' }}"
+          TARGET_NAT_IP="${{ github.event.inputs.nat_ip || '43.156.117.131' }}"
 
           sed "s/%SERVER_IP%/$TARGET_SERVER_IP/g; s/%NAT_IP%/$TARGET_NAT_IP/g" emummc.template.txt > release_package/atmosphere/hosts/emummc.txt
           cp release_package/atmosphere/hosts/emummc.txt release_package/atmosphere/hosts/sysmmc.txt
