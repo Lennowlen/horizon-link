@@ -1,0 +1,61 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New password, HorizonLink</title>
+<meta name="description" content="Choose a new HorizonLink password.">
+<link rel="icon" href="assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/rework.css?v=20261007n">
+<link rel="stylesheet" href="assets/css/pages.css?v=20261007d">
+<script src="assets/js/i18n.js?v=20261008a"></script>
+</head>
+<body data-page="reset">
+<a class="saut" href="#contenu">Skip to content</a>
+
+<div id="nx-barre"></div>
+
+<main id="contenu" class="">
+
+  <section class="plaque auth" aria-labelledby="titre-reset">
+    <div class="auth-ciel">
+      <div class="contenu"><h1>A fresh password.</h1><p>Choose something long and unique. You'll be signed out everywhere else.</p></div>
+    </div>
+    <div class="auth-form">
+      <form class="auth-etape" id="form-reset" novalidate>
+        <h2 id="titre-reset">New password</h2>
+        <p class="message message--erreur" id="reset-message" role="alert" hidden>Use at least 8 characters and type it twice the same.</p>
+        <div class="champ"><label for="mdp">New password</label>
+          <div class="mot-de-passe"><input id="mdp" type="password" autocomplete="new-password" placeholder="At least 8 characters" required><button type="button" class="voir-mdp"></button></div>
+          <div class="force" id="force" data-niveau="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <small id="force-texte">At least 8 characters.</small>
+        </div>
+        <div class="champ"><label for="mdp2">Confirm password</label>
+          <div class="mot-de-passe"><input id="mdp2" type="password" autocomplete="new-password" placeholder="Type it again" required><button type="button" class="voir-mdp"></button></div>
+          <small id="mdp2-texte"></small>
+        </div>
+        <button class="bouton bouton--plein" type="submit">Save the password</button>
+        <p class="auth-bas"><a class="lien" href="login.html">Back to sign in</a></p>
+      </form>
+      <div class="auth-etape" id="etape-fini" hidden>
+        <span class="grand-icone"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <h2>Password changed</h2>
+        <p class="petit">Your other sessions were signed out. Sign in again with your new password.</p>
+        <a class="bouton bouton--plein" href="login.html">Sign in</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="nx-pied"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/js/nx.js?v=20261002b" defer></script>
+<script src="assets/js/commun.js?v=20261007p" defer></script>
+<script src="assets/js/pages.js?v=20261004-t99" defer></script>
+<script src="assets/js/effets.js?v=20260925h" defer></script>
+</body>
+</html>

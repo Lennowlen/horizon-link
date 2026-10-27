@@ -1,0 +1,50 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Network status, HorizonLink</title>
+<meta name="description" content="Live status of every HorizonLink game server.">
+<link rel="icon" href="assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/rework.css?v=20261007n">
+<link rel="stylesheet" href="assets/css/pages.css?v=20261007d">
+<script src="assets/js/i18n.js?v=20261008a"></script>
+</head>
+<body data-page="status">
+<a class="saut" href="#contenu">Skip to content</a>
+
+<div id="nx-barre"></div>
+
+<main id="contenu" class="">
+
+  <section class="plaque page-tete">
+    <h1 class="page-titre">Server status</h1>
+    <p class="page-intro">Live health of every game server, refreshed every 15 seconds.</p>
+  </section>
+  <section class="plaque" aria-labelledby="etat-titre" aria-live="polite">
+    <div class="bandeau-etat" id="etat-bandeau">
+      <span class="gros-point" aria-hidden="true"></span>
+      <div><strong id="etat-titre">Checking the network…</strong><p class="petit" id="etat-texte"></p></div>
+    </div>
+    <div class="entete-plaque" style="margin-top:22px">
+      <h2 class="titre-plaque">Game servers</h2>
+      <span class="petit" id="etat-maj"></span>
+    </div>
+    <ul class="serveurs" id="serveurs"></ul>
+  </section>
+</main>
+
+<div id="nx-pied"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/js/sm3dw-counts.js?v=20261003a" defer></script>
+<script src="assets/js/nx.js?v=20261002b" defer></script>
+<script src="assets/js/commun.js?v=20261007p" defer></script>
+<script src="assets/js/pages.js?v=20261004-t99" defer></script>
+<script src="assets/js/effets.js?v=20260925h" defer></script>
+</body>
+</html>

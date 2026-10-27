@@ -1,0 +1,110 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forgot password, HorizonLink</title>
+<meta name="description" content="Sign in to HorizonLink, create an account or reset your password.">
+<link rel="icon" href="assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/rework.css?v=20261007n">
+<link rel="stylesheet" href="assets/css/pages.css?v=20261007d">
+<link rel="stylesheet" href="assets/css/auth.css?v=20260925h">
+<script src="assets/js/i18n.js?v=20261008a"></script>
+</head>
+<body data-page="auth" data-mode="reset">
+<a class="saut" href="#contenu">Skip to content</a>
+
+<div id="nx-barre"></div>
+
+<main id="contenu" class="coquille">
+
+  <!-- Left: the aurora hero (ScanVerse AuthHero) -->
+  <section class="heros-auth" aria-labelledby="heros-titre">
+    <canvas id="aurore" aria-hidden="true"></canvas>
+    <div class="heros-voile" aria-hidden="true"></div>
+    <div class="heros-contenu entre" id="heros-contenu">
+      <a class="heros-marque" href="index.html"><img src="assets/img/HorizonLink.png" alt="" width="34" height="34"><span>HorizonLink <em>Network</em></span></a>
+      <div>
+        <h1 id="heros-titre" class="heros-titre"></h1>
+        <p id="heros-sous" class="heros-sous"></p>
+      </div>
+      <ol class="heros-etapes" id="heros-etapes"></ol>
+    </div>
+  </section>
+
+  <!-- Right: one card that morphs between modes (Maison Olena LoginCard) -->
+  <section class="colonne-form">
+    <div class="carte-auth mode-reset" id="carte">
+      <div class="carte-vue carte-vue--form">
+        <header class="carte-tete">
+          <h2 id="carte-h"></h2>
+          <p id="carte-p"></p>
+        </header>
+        <p class="message message--erreur" id="fermees" hidden>Sign-ups are closed for now. Follow the Discord to know when they reopen.</p>
+        <p class="message message--erreur" id="message" role="alert" hidden></p>
+        <form id="form" novalidate>
+          <div class="pli pli--register">
+            <label class="champ">Username (display name)
+              <input id="pseudo" autocomplete="username" placeholder="Inkling_Pro" maxlength="16" data-requis="register">
+              <small id="pseudo-texte">3 to 16 letters, numbers, - or _.</small>
+            </label>
+          </div>
+          <label class="champ">E-mail address<input id="email" type="email" autocomplete="email" placeholder="you@example.com" data-requis="toujours" required></label>
+          <div class="pli pli--register">
+            <div class="champ"><span id="pays-label">Country</span><div class="pays" id="pays" aria-labelledby="pays-label"></div></div>
+          </div>
+          <div class="pli pli--mdp">
+            <div class="champ">
+              <label for="mdp">Password</label>
+              <div class="mot-de-passe"><input id="mdp" type="password" autocomplete="current-password" placeholder="••••••••" data-requis="login register"><button type="button" class="voir-mdp voir" aria-label="Show password"><svg class="o1" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><svg class="o2" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.3 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
+            </div>
+            <div class="pli pli--register pli--force">
+              <div class="force-piste"><i id="force-barre"></i></div>
+              <small id="force-texte"></small>
+            </div>
+          </div>
+          <div class="pli pli--register">
+            <div class="champ">
+              <label for="mdp2">Confirm password</label>
+              <div class="mot-de-passe"><input id="mdp2" type="password" autocomplete="new-password" placeholder="••••••••" data-requis="register"><button type="button" class="voir-mdp voir" aria-label="Show password"><svg class="o1" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><svg class="o2" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.3 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
+            </div>
+          </div>
+          <div class="pli pli--login">
+            <div class="extras">
+              <label class="se-souvenir"><input type="checkbox" checked> Remember me</label>
+              <a class="lien" href="forgot.html" data-vers="reset">Forgot password?</a>
+            </div>
+          </div>
+          <div class="ts" id="ts"></div>
+          <button type="submit" class="bouton bouton--plein bouton-auth" id="envoyer"><span></span></button>
+          <div class="separateur"><span id="separateur"></span></div>
+          <button type="button" class="bouton bouton--verre bouton-auth" id="autre"></button>
+        </form>
+      </div>
+      <div class="carte-vue carte-vue--fin" aria-live="polite">
+        <span class="grand-icone grand-icone--orange"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <h2 id="fin-titre">Check your e-mail</h2>
+        <p class="petit"><span id="fin-texte-1"></span><strong id="fin-email"></strong><span id="fin-texte-2"></span></p>
+        <a class="bouton bouton--plein" href="compte.html">Continue to my account</a>
+        <button type="button" class="bouton bouton--verre" id="recommencer">Back to sign in</button>
+        <p class="note">Nothing after a few minutes? Check your spam folder.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="nx-pied"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/js/nx.js?v=20261002b" defer></script>
+<script src="assets/js/commun.js?v=20261007p" defer></script>
+<script src="assets/js/pages.js?v=20261004-t99" defer></script>
+<script src="assets/js/auth.js?v=20260928v1" defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=nxTurnstileOnload" async defer></script>
+<script src="assets/js/effets.js?v=20260925h" defer></script>
+</body>
+</html>

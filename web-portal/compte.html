@@ -1,0 +1,415 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My account, HorizonLink</title>
+<link rel="icon" href="assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/rework.css?v=20261007n">
+<link rel="stylesheet" href="assets/css/compte.css?v=20261002a">
+<script src="assets/js/i18n.js?v=20261008a"></script>
+</head>
+<body class="page-compte" data-page="compte" data-attente="donnees">
+<a class="saut" href="#contenu">Skip to content</a>
+
+<div id="nx-barre"></div>
+
+<main id="contenu" class="grille-compte">
+
+  <!-- Member card: the banner is only a backdrop; only the photo overlaps it -->
+  <section class="plaque membre" aria-labelledby="membre-pseudo">
+    <div class="membre-ciel" aria-hidden="true"></div>
+    <div class="membre-corps">
+      <img class="membre-photo" id="membre-photo" src="" alt="Your profile picture" width="128" height="128">
+      <div class="membre-texte">
+        <h1 id="membre-pseudo">…</h1>
+        <p class="presence" id="presence"><span class="presence-point" aria-hidden="true"></span><span id="presence-texte">…</span></p>
+        <ul class="badges-profil" id="puces" aria-label="Badges" hidden></ul>
+      </div>
+      <div class="membre-actions">
+        <div class="code-ami">
+          <span class="petit">Your friend code</span>
+          <button type="button" id="copier-code" class="code-bouton">
+            <strong id="code-ami">…</strong>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <span class="sr">Copy</span>
+          </button>
+        </div>
+        <button type="button" class="bouton bouton--verre" data-ouvre="dlg-profil">Edit profile</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="colonne">
+    <section class="plaque" aria-labelledby="titre-activite">
+      <h2 id="titre-activite" class="titre-plaque">Activity</h2>
+      <div class="maintenant" id="maintenant"></div>
+      <dl class="compteurs">
+        <div><dt>Play time</dt><dd id="c-temps">…</dd></div>
+        <div><dt>Games played</dt><dd id="c-jeux">…</dd></div>
+        <div><dt>Friends</dt><dd id="c-amis">…</dd></div>
+        <div><dt>Friends online</dt><dd id="c-enligne" class="vert">…</dd></div>
+      </dl>
+    </section>
+
+    <section class="plaque" aria-labelledby="titre-historique">
+      <div class="entete-plaque">
+        <h2 id="titre-historique" class="titre-plaque">Game history</h2>
+        <span class="petit" id="historique-compte"></span>
+      </div>
+      <ul class="historique" id="historique"></ul>
+      <button type="button" class="bouton bouton--verre bouton--large" id="voir-tout" hidden>See all games</button>
+    </section>
+
+    <section class="plaque" aria-labelledby="titre-sauvegardes">
+      <div class="entete-plaque">
+        <h2 id="titre-sauvegardes" class="titre-plaque">Cloud saves</h2>
+        <span class="quota-texte" id="quota-texte">…</span>
+      </div>
+      <div class="quota" aria-hidden="true"><i id="quota-barre"></i></div>
+      <ul class="sauvegardes" id="sauvegardes"></ul>
+      <p class="vide-bloc" id="sauvegardes-vide">No cloud saves yet. Save from Ryujinx or your Switch while signed in, and your saves will appear here.</p>
+      <p class="note">Cloud saves require a verified e-mail and a linked Discord account. Server boosters get 10 MB instead of 5 MB.</p>
+    </section>
+
+    <section class="plaque" aria-labelledby="titre-applis" id="bloc-applis">
+      <div class="entete-plaque">
+        <h2 id="titre-applis" class="titre-plaque">Authorized applications</h2>
+        <span class="petit" id="applis-compte"></span>
+      </div>
+      <p class="note">Applications you allowed to access your HorizonLink account. See what each one can do and remove its access at any time.</p>
+      <label class="recherche"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="search" id="applis-recherche" placeholder="Search authorized applications" aria-label="Search authorized applications"></label>
+      <ul class="applis-autorisees" id="applis-autorisees"></ul>
+      <p class="vide-bloc" id="applis-vide" hidden>No authorized application yet. When you sign in to an application with HorizonLink, it appears here.</p>
+      <details class="applis-bloquees" id="applis-bloquees-bloc" hidden>
+        <summary>Blocked applications</summary>
+        <ul id="applis-bloquees"></ul>
+      </details>
+    </section>
+
+    <section class="plaque" aria-labelledby="titre-brancher">
+      <div class="entete-plaque">
+        <h2 id="titre-brancher" class="titre-plaque">Connect this account</h2>
+        <a class="pastille-lien" href="telecharger.html">Downloads</a>
+      </div>
+      <p class="intro">One account everywhere. Sign in once per device.</p>
+      <ul class="branchements">
+        <li><strong>Ryujinx HorizonLink</strong><span>Actions, then connect to the HorizonLink.</span></li>
+        <li><strong>Citron HorizonLink</strong><span>Emulation, then HorizonLink, then Sign in.</span></li>
+        <li><strong>Switch with CFW</strong><span>Enable the HorizonLink profile, then link your account from the console.</span></li>
+        <li><strong>HorizonLink app</strong><span>Tap Sign in with HorizonLink on iPhone or Android.</span></li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="colonne">
+    <section class="plaque" aria-labelledby="titre-amis">
+      <div class="entete-plaque">
+        <h2 id="titre-amis" class="titre-plaque">Friends <span class="compte-amis" id="compte-amis"></span></h2>
+      </div>
+
+      <form class="ajout" id="form-ajout" autocomplete="off">
+        <label for="code-ajout">Add a friend</label>
+        <div class="ajout-ligne">
+          <input id="code-ajout" name="code" inputmode="numeric" placeholder="SW-0000-0000-0000" maxlength="17" aria-describedby="ajout-etat">
+          <button type="submit" class="bouton bouton--plein">Send request</button>
+        </div>
+        <p class="ajout-etat" id="ajout-etat" role="status"></p>
+      </form>
+
+      <div class="outils-amis">
+        <label class="recherche">
+          <span class="sr">Search friends</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="search" id="recherche" placeholder="Search friends…" autocomplete="off">
+        </label>
+        <div class="filtres" role="tablist" aria-label="Filter friends">
+          <button type="button" role="tab" aria-selected="true" data-filtre="tous">All</button>
+          <button type="button" role="tab" aria-selected="false" data-filtre="enligne">Online</button>
+          <button type="button" role="tab" aria-selected="false" data-filtre="favoris">Favorites</button>
+        </div>
+      </div>
+      <ul class="amis" id="amis" aria-live="polite"></ul>
+      <nav class="pages" id="pages" aria-label="Friends list pages"></nav>
+    </section>
+
+    <section class="plaque" aria-labelledby="titre-demandes">
+      <h2 id="titre-demandes" class="titre-plaque">Friend requests</h2>
+      <div class="demandes-tete"><h3 class="sous-titre">Received</h3>
+        <div class="demandes-groupe" id="groupe-recues" hidden>
+          <button type="button" class="bouton bouton--plein petit-bouton" id="tout-accepter">Accept all</button>
+          <button type="button" class="bouton bouton--verre petit-bouton" id="tout-refuser">Decline all</button>
+        </div></div>
+      <ul class="demandes" id="recues"></ul>
+      <nav class="pages" id="pages-recues" hidden aria-label="Pagination demandes"></nav>
+      <div class="demandes-tete"><h3 class="sous-titre">Sent</h3>
+        <div class="demandes-groupe" id="groupe-envoyees" hidden>
+          <button type="button" class="bouton bouton--verre petit-bouton" id="tout-annuler">Cancel all</button>
+        </div></div>
+      <ul class="demandes" id="envoyees"></ul>
+      <button type="button" class="plus" id="plus-envoyees" hidden></button>
+    </section>
+
+    <section class="plaque identite" aria-labelledby="titre-identite">
+      <div class="entete-plaque">
+        <h2 id="titre-identite" class="titre-plaque">Network identity</h2>
+        <svg class="entete-icone" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="11" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 16c.6-1.5 1.7-2.2 3-2.2s2.4.7 3 2.2M14 10h4M14 13.5h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+      <dl class="lignes">
+        <div><dt>Username</dt><dd><strong id="i-pseudo">…</strong><button type="button" class="pilule" data-ouvre="dlg-profil">edit</button></dd></div>
+        <div><dt>Friend code</dt><dd><strong class="mono" id="i-code">…</strong><button type="button" class="pilule" id="i-copier">copy</button></dd></div>
+        <div><dt>Network ID (PID)</dt><dd><strong class="mono" id="i-pid">…</strong></dd></div>
+        <div><dt id="pays-label">Country</dt><dd><div class="pays" id="pays"></div></dd></div>
+        <div><dt>E-mail</dt><dd><strong id="i-email">…</strong><span class="badge" id="i-verifie"></span></dd></div>
+        <div><dt>Discord</dt><dd id="i-discord">…</dd></div>
+        <div><dt>Member since</dt><dd><strong id="i-depuis">…</strong></dd></div>
+      </dl>
+      <h3 class="sous-titre sous-titre--securite">Security</h3>
+      <div class="actions-compte">
+        <button type="button" class="bouton bouton--verre" id="btn-reinitialiser-mdp">Reset password</button>
+        <button type="button" class="bouton bouton--verre" data-ouvre="dlg-email">Change e-mail</button>
+        <a class="bouton bouton--verre" href="sessions.html">My sessions</a>
+      </div>
+      <div class="actions-compte actions-compte--admin" id="lien-admin" hidden>
+        <a class="bouton bouton--verre" href="admin.html">Admin area</a>
+      </div>
+      <div class="zone-danger">
+        <button type="button" class="bouton bouton--sortie" id="btn-deconnexion">Sign out</button>
+        <button type="button" class="bouton bouton--danger" data-ouvre="dlg-supprimer">Delete my account</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="nx-pied"></div>
+
+<!-- Dialogs -->
+<dialog id="dlg-profil" class="dialogue dialogue--profil" aria-labelledby="dlg-profil-titre">
+  <form method="dialog" class="dialogue-corps" data-sauve="Profile updated.">
+    <div class="entete-plaque" style="margin-bottom:0">
+      <h2 id="dlg-profil-titre">Edit profile</h2>
+      <button type="button" class="fermer-x fermer-x--plat" data-ferme aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+
+    <div class="editeur-haut">
+      <div class="editeur-apercu">
+        <div class="profil-apercu" id="profil-apercu">
+          <img id="profil-photo" src="" alt="Profile picture preview" width="128" height="128">
+        </div>
+        <span class="apercu-label">Preview</span>
+      </div>
+      <div class="editeur-champs">
+        <label class="champ">Username
+          <input id="profil-pseudo" maxlength="16" pattern="[A-Za-z0-9_-]{3,16}" required autocomplete="off">
+          <small>3 to 16 characters: letters, digits, _ or -.</small>
+        </label>
+        <fieldset class="couleurs">
+          <legend>Background color</legend>
+          <div id="couleurs"></div>
+        </fieldset>
+      </div>
+    </div>
+
+    <fieldset class="avatar-choix">
+      <legend>Profile picture <span class="ip-indice">: layer a character, background, and frame</span></legend>
+      <div class="ip-barre">
+        <div class="avatar-onglets" role="tablist" aria-label="Avatar layers">
+          <button type="button" role="tab" data-calque="char" aria-selected="true"><span class="onglet-texte">Character</span><span class="onglet-point" aria-hidden="true"></span></button>
+          <button type="button" role="tab" data-calque="bg" aria-selected="false"><span class="onglet-texte">Background</span><span class="onglet-point" aria-hidden="true"></span></button>
+          <button type="button" role="tab" data-calque="frame" aria-selected="false"><span class="onglet-texte">Frame</span><span class="onglet-point" aria-hidden="true"></span></button>
+        </div>
+        <div class="ip-barre-droite">
+          <button type="button" class="ip-clear-btn" id="avatar-vider" hidden>Clear this layer</button>
+          <select id="avatar-jeu" class="ip-select" aria-label="Filter by game"></select>
+        </div>
+      </div>
+      <div class="avatar-grille" id="avatar-grille" role="listbox" aria-label="Choose an avatar"></div>
+    </fieldset>
+
+    <canvas id="avatar-toile" width="256" height="256" hidden></canvas>
+    <input type="file" accept="image/*" id="profil-fichier" hidden>
+    <button type="button" id="profil-retirer" hidden></button>
+
+    <div class="ligne-boutons fin">
+      <button value="annuler" class="bouton bouton--verre" formnovalidate>Cancel</button>
+      <button value="ok" class="bouton bouton--plein" id="save-profile">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-email" class="dialogue" aria-labelledby="dlg-email-titre">
+  <form method="dialog" class="dialogue-corps" data-sauve="Check your new inbox to confirm the change.">
+    <h2 id="dlg-email-titre">Change e-mail</h2>
+    <label class="champ">New e-mail address<input type="email" required autocomplete="email"></label>
+    <label class="champ">Your current password<input type="password" required autocomplete="current-password"></label>
+    <div class="ligne-boutons fin">
+      <button value="annuler" class="bouton bouton--verre" formnovalidate>Cancel</button>
+      <button value="ok" class="bouton bouton--plein">Change e-mail</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-supprimer" class="dialogue" aria-labelledby="dlg-supprimer-titre">
+  <form method="dialog" class="dialogue-corps" id="form-supprimer">
+    <h2 id="dlg-supprimer-titre">Delete my account</h2>
+    <p>Your friends, history and cloud saves will be deleted permanently. This cannot be undone.</p>
+    <label class="champ">Your password, to confirm<input type="password" id="suppr-mdp" required autocomplete="current-password"></label>
+    <div class="ligne-boutons fin">
+      <button value="annuler" class="bouton bouton--verre" formnovalidate>Cancel</button>
+      <button value="ok" class="bouton bouton--danger" id="btn-confirmer-suppr">Delete permanently</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-confirmer" class="dialogue" aria-labelledby="dc-titre">
+  <form method="dialog" class="dialogue-corps">
+    <h2 id="dc-titre"></h2>
+    <p id="dc-texte"></p>
+    <div class="ligne-boutons fin">
+      <button type="button" class="bouton bouton--verre" id="dc-non">Keep them</button>
+      <button type="button" class="bouton bouton--danger" id="dc-oui"></button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-ami" class="dialogue dialogue--large" aria-labelledby="fm-nom">
+  <div class="fiche">
+    <div class="fiche-ciel" aria-hidden="true"></div>
+    <button type="button" class="fermer-x" data-ferme aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="fiche-tete">
+      <img class="fiche-photo" id="fm-photo" src="" alt="" width="104" height="104">
+      <div class="fiche-titre">
+        <h2 id="fm-nom">…</h2>
+        <p class="presence" id="fm-presence"><span class="presence-point" aria-hidden="true"></span><span id="fm-etat"></span></p>
+        <ul class="badges-profil" id="fm-badges" aria-label="Badges" hidden></ul>
+      </div>
+      <button type="button" class="code-bouton" id="fm-code"><strong></strong><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="sr">Copy friend code</span></button>
+    </div>
+    <dl class="fiche-stats">
+      <div><dt>Play time</dt><dd id="fm-temps">…</dd></div>
+      <div><dt>Games played</dt><dd id="fm-jeux">…</dd></div>
+      <div><dt>Favorite game</dt><dd id="fm-favori-jeu">…</dd></div>
+      <div><dt>Member since</dt><dd id="fm-depuis">…</dd></div>
+      <div><dt>Network ID (PID)</dt><dd class="mono" id="fm-pid">…</dd></div>
+      <div><dt>Last activity</dt><dd id="fm-derniere">…</dd></div>
+    </dl>
+    <h3 class="sous-titre">Game history</h3>
+    <ul class="historique historique--fiche" id="fm-historique"></ul>
+    <div class="fiche-actions">
+      <button type="button" class="bouton bouton--verre" id="fm-favori">Add to favorites</button>
+      <span class="espace"></span>
+      <button type="button" class="bouton bouton--sortie" id="fm-retirer">Remove from friends</button>
+      <button type="button" class="bouton bouton--danger" id="fm-bloquer">Block</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlg-jeux" class="dialogue dialogue--large" aria-labelledby="jeux-titre">
+  <div class="dialogue-corps">
+    <div class="entete-plaque">
+      <h2 id="jeux-titre">All your games <span class="compte-amis" id="jeux-compte"></span></h2>
+      <button type="button" class="fermer-x fermer-x--plat" data-ferme aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+    <label class="recherche">
+      <span class="sr">Search through your games</span>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="search" id="jeux-recherche" placeholder="Search through your games" autocomplete="off">
+    </label>
+    <div class="tri" role="group" aria-label="Sort games">
+      <button type="button" aria-pressed="true" data-tri="recent">Most recent</button>
+      <button type="button" aria-pressed="false" data-tri="temps">Most played</button>
+      <button type="button" aria-pressed="false" data-tri="nom">A to Z</button>
+    </div>
+    <ul class="historique historique--tout" id="jeux-liste"></ul>
+  </div>
+</dialog>
+
+<dialog id="dlg-jeu" class="dialogue dialogue--jeu" aria-labelledby="gm-nom">
+  <div class="jeu">
+    <div class="jeu-tete">
+      <div class="jeu-fond" id="gm-fond" aria-hidden="true"></div>
+      <img class="jeu-icone" id="gm-icone" src="" alt="" width="96" height="96">
+      <div class="jeu-titre">
+        <h2 id="gm-nom">…</h2>
+        <p class="petit" id="gm-sous"></p>
+      </div>
+      <button type="button" class="fermer-x" data-ferme aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="jeu-corps">
+      <div class="jeu-media">
+        <div class="jeu-scene"><img id="gm-scene" src="" alt=""></div>
+        <div class="jeu-vignettes" id="gm-vignettes" role="group" aria-label="Screenshots"></div>
+        <p class="jeu-accroche" id="gm-accroche"></p>
+        <p class="jeu-desc" id="gm-desc"></p>
+      </div>
+      <aside class="jeu-cote">
+        <a class="bouton bouton--plein jeu-achat" id="gm-achat" href="https://www.nintendo.com/" target="_blank" rel="noopener noreferrer" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 4h2.2l2.1 11.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.5-1.1L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/></svg>
+          <span>Buy on the Nintendo eShop</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <section class="jeu-bloc">
+          <h3 id="gm-progres-titre">Your progress</h3>
+          <div class="jeu-progres">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <div><strong id="gm-temps">…</strong><span>played</span></div>
+          </div>
+          <div class="jeu-progres">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <div><strong id="gm-derniere">…</strong><span>last session</span></div>
+          </div>
+        </section>
+        <section class="jeu-bloc">
+          <h3>Details</h3>
+          <dl class="lignes lignes--serrees" id="gm-details"></dl>
+        </section>
+      </aside>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlg-sauvegarde" class="dialogue dialogue--large" aria-labelledby="sv-titre">
+  <div class="dialogue-corps">
+    <div class="entete-plaque"><h2 id="sv-titre">…</h2><button type="button" class="fermer-x fermer-x--plat" data-ferme aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+    <dl class="lignes" id="sv-details"></dl>
+  </div>
+</dialog>
+
+<dialog id="dlg-sauvegarde-suppr" class="dialogue" aria-labelledby="svs-titre">
+  <div class="dialogue-corps">
+    <h2 id="svs-titre">Delete this cloud save?</h2>
+    <p>The copy of <strong id="svs-nom"></strong> stored on HorizonLink will be deleted. The save on your console or emulator is untouched.</p>
+    <div class="ligne-fin"><button type="button" class="bouton bouton--verre" data-ferme>Cancel</button><button type="button" class="bouton bouton--danger" id="svs-ok">Delete</button></div>
+  </div>
+</dialog>
+
+<dialog id="dlg-signaler-appli" class="dialogue" aria-labelledby="sa-titre">
+  <form class="dialogue-corps" id="form-signaler-appli">
+    <h2 id="sa-titre">Report this application</h2>
+    <p><strong id="sa-nom"></strong></p>
+    <label class="champ">Reason
+      <select id="sa-motif" required>
+        <option value="impersonation">It pretends to be HorizonLink or another application</option>
+        <option value="scam">Scam or phishing</option>
+        <option value="malicious">It does something I didn't allow</option>
+        <option value="inappropriate">Inappropriate name, icon or content</option>
+        <option value="other">Other</option>
+      </select>
+    </label>
+    <label class="champ">Details (optional)<textarea id="sa-texte" maxlength="500"></textarea></label>
+    <div class="ligne-boutons fin"><button type="button" class="bouton bouton--verre" data-ferme>Cancel</button><button type="submit" class="bouton bouton--danger">Send the report</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/js/nx.js?v=20261002b" defer></script>
+<script src="assets/js/commun.js?v=20261007p" defer></script>
+<script src="assets/js/compte.js?v=20261007d" defer></script>
+<script src="assets/js/applications.js?v=20261003a" defer></script>
+<script src="assets/js/effets.js?v=20260928b" defer></script>
+</body>
+</html>

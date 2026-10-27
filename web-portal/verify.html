@@ -1,0 +1,51 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify e-mail, HorizonLink</title>
+<meta name="description" content="Confirm your e-mail address.">
+<link rel="icon" href="assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/rework.css?v=20261007n">
+<link rel="stylesheet" href="assets/css/pages.css?v=20261007d">
+<script src="assets/js/i18n.js?v=20261008a"></script>
+</head>
+<body data-page="verify">
+<a class="saut" href="#contenu">Skip to content</a>
+
+<div id="nx-barre"></div>
+
+<main id="contenu" class="">
+
+  <section class="plaque auth" aria-labelledby="titre-verif" aria-live="polite">
+    <div class="auth-ciel">
+      <div class="contenu"><h1>One last step.</h1><p>Confirming your e-mail protects your account and unlocks cloud saves.</p></div>
+    </div>
+    <div class="auth-form">
+      <div class="auth-etape" id="etape-attente">
+        <span class="roue" aria-hidden="true"></span>
+        <h2 id="titre-verif">Verifying…</h2>
+        <p class="petit">Checking your confirmation link.</p>
+      </div>
+      <div class="auth-etape" id="etape-verifie" hidden>
+        <span class="grand-icone"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <h2>E-mail verified</h2>
+        <p class="petit">Your address is confirmed. You can now use cloud saves once your Discord is linked.</p>
+        <a class="bouton bouton--plein" href="compte.html">Go to my account</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="nx-pied"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/js/nx.js?v=20261002b" defer></script>
+<script src="assets/js/commun.js?v=20261007p" defer></script>
+<script src="assets/js/pages.js?v=20261004-t99" defer></script>
+<script src="assets/js/effets.js?v=20260925h" defer></script>
+</body>
+</html>

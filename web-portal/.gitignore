@@ -1,0 +1,8 @@
+assets/data/
+
+# Staff tools (news editor, application moderation, client-side gate): never in the public repo
+admin-news.html
+developers-news.html
+assets/js/admin-news.js
+assets/js/admin-applis.js
+assets/js/garde.js

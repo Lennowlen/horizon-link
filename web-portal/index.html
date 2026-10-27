@@ -1,199 +1,250 @@
-<!DOCTYPE html>
-<html lang="id">
+﻿<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HorizonLink — Nintendo Switch CFW Online Network & Community</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #080c14; }
-    .mono { font-family: 'JetBrains Mono', monospace; }
-  </style>
+<meta charset="utf-8">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HorizonLink</title>
+<meta name="description" content="HorizonLink brings Switch online play back: accounts, friends, presence and matchmaking, on Ryujinx, Citron or a Switch with CFW.">
+<link rel="icon" href="assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/rework.css?v=20261007n">
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"},
+ "integrity":{
+  "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js":"sha384-61S/Nu32S3E5+n+KpCOTb2eRYps6fVKm+9Gz1QBvSePFthb46f063Aa/qe/lykFZ",
+  "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js":"sha384-oxY9vSeh7Mrt5WmhN8xfWoDRnmoW9krEiRBY7vJKaK90jMUidM0fhbUwcblpBgTu",
+  "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js":"sha384-ZGqh+dJjt6z9NHsWYYt+TPDFj8y+2If7naI6a6AkkyNZyH51CVS3HTWFh0njp4k6",
+  "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js":"sha384-jHGXS4+FuVOBnZkNme2ury3Ccg5DWDLYK22xX/WGdZCZsjRM4J+3n6Qc4CXx1Hjf",
+  "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js":"sha384-zhZjnxc+3j2IeX2itXt+5CnnC0YleVRvu5EOaj733tRp38E9hBPnZjweEWX2kN7y"}}
+</script>
+<script src="assets/js/i18n.js?v=20261008a"></script>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col antialiased">
-  <!-- Navbar -->
-  <header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20 text-sm tracking-wider">
-          HL
-        </div>
-        <span class="font-bold text-lg tracking-tight text-white">Horizon<span class="text-cyan-400">Link</span></span>
+<body data-page="accueil">
+<a class="saut" href="#contenu">Skip to content</a>
+
+<div id="nx-barre"></div>
+
+<main id="contenu">
+
+  <!-- 1. Le hero : le soleil HorizonLink sur l'horizon, puis l'état du réseau et les nouveautés -->
+  <section class="plaque plaque--hero" aria-labelledby="titre-hero">
+    <div class="horizon">
+      <div class="ciel" aria-hidden="true">
+        <span class="halo"></span>
+        <img class="soleil" src="assets/img/HorizonLink.png" alt="">
+        <svg class="collines" viewBox="0 0 1200 260" preserveAspectRatio="none">
+          <path class="c1" d="M0 150 C 140 90 260 120 380 105 S 640 60 780 100 S 1050 70 1200 110 L1200 260 L0 260 Z"/>
+          <path class="c2" d="M0 190 C 180 150 300 175 460 160 S 760 130 900 165 S 1100 150 1200 170 L1200 260 L0 260 Z"/>
+          <path class="c3" d="M0 225 C 200 205 420 222 600 212 S 980 200 1200 218 L1200 260 L0 260 Z"/>
+        </svg>
       </div>
-      <div class="flex items-center gap-5 text-sm font-medium">
-        <a href="#servers" class="text-slate-400 hover:text-white transition">Status Server</a>
-        <a href="#guide" class="text-slate-400 hover:text-white transition">Panduan SD Card</a>
-        <a href="#donate" class="text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5 font-semibold">
-          <span>☕</span> Donasi Server
-        </a>
-        <a href="#register" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl transition shadow-md shadow-cyan-600/25">
-          Daftar Akun
-        </a>
+      <div class="hero-texte">
+        <h1 id="titre-hero">Switch online play isn't going dark.</h1>
+        <p>HorizonLink is an alternative to the official online services: your own account, friends, presence and matchmaking, on Ryujinx, Citron or a Switch with CFW.</p>
+        <div class="actions">
+          <a class="bouton bouton--plein bord-etoile" href="register.html">Create my account</a>
+          <a class="bouton bouton--verre" href="telecharger.html">Download the emulator</a>
+        </div>
       </div>
     </div>
-  </header>
 
-  <!-- Hero Section -->
-  <main class="flex-1 max-w-6xl mx-auto px-6 py-12 w-full space-y-20">
-    <section class="text-center max-w-3xl mx-auto space-y-6 pt-4">
-      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/40 border border-cyan-800/40 text-cyan-300 text-xs font-semibold">
-        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-        Infrastruktur Server Mandiri & Bebas Risiko Ban
-      </div>
-      <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
-        Mabar Online Switch CFW Lebih Mudah & Stabil.
-      </h1>
-      <p class="text-slate-400 text-base sm:text-lg leading-relaxed">
-        HorizonLink menghadirkan jaringan mandiri untuk Nintendo Switch (Atmosphere CFW) dan emulator Ryujinx. Mainkan Mario Kart 8 Deluxe, Super Smash Bros, dan Splatoon bersama teman tanpa langganan resmi.
-      </p>
-      <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
-        <a href="#register" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold px-6 py-3.5 rounded-xl transition shadow-lg shadow-cyan-600/30">
-          Buat Akun & Dapatkan Friend Code
-        </a>
-        <a href="#guide" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/80 font-semibold px-6 py-3.5 rounded-xl transition">
-          Unduh Paket SD Card (.zip)
-        </a>
-      </div>
-    </section>
-
-    <!-- Server Live Status -->
-    <section id="servers" class="space-y-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-2xl font-bold text-white tracking-tight">Status Game Server</h2>
-          <p class="text-sm text-slate-400">Monitoring matchmaking dan protokol NEX / PRUDP secara real-time</p>
-        </div>
-        <span class="text-xs text-emerald-400 font-medium px-3 py-1 bg-emerald-950/40 border border-emerald-800/50 rounded-full flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Semua Node Online
+    <div class="hero-bas">
+      <a class="pouls" href="status.html">
+        <span class="pouls-point" aria-hidden="true"></span>
+        <span class="pouls-texte">
+          <strong id="pouls-total">…</strong>
+          <span>players online right now</span>
         </span>
+      </a>
+      <div class="nouveautes">
+        <h2>What's new</h2>
+        <ul>
+          <li><a href="telecharger.html">The HorizonLink app is out on iPhone and Android: friends, activity and saves in your pocket.</a></li>
+          <li><a href="telecharger.html">Citron HorizonLink joins Ryujinx: two emulators, one account.</a></li>
+          <li><a href="compte.html">Your picture and username now sync between your Switch, the site and the app.</a></li>
+        </ul>
       </div>
+    </div>
+  </section>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Game 1: MK8DX -->
-        <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 space-y-4 hover:border-cyan-800/60 transition group">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold px-2.5 py-1 rounded bg-cyan-950/60 text-cyan-400 border border-cyan-800/40">NEX Engine</span>
-            <span class="text-xs text-emerald-400 font-mono">Port :60003 UDP</span>
-          </div>
-          <div>
-            <h3 class="font-bold text-lg text-white group-hover:text-cyan-300 transition">Mario Kart 8 Deluxe</h3>
-            <p class="text-xs text-slate-400">Versi: v3.0.1 - v3.0.3 (Wave 6)</p>
-          </div>
-          <div class="pt-3 border-t border-slate-800/80 flex justify-between text-xs text-slate-400">
-            <span>Matchmaking: <b class="text-emerald-400">Aktif</b></span>
-            <span>Room: <b class="text-white">Live</b></span>
-          </div>
-        </div>
+  <!-- 2. Les jeux, comme une carte : six jaquettes avec le nombre de joueurs en direct -->
+  <section class="plaque" id="jeux" aria-labelledby="titre-jeux">
+    <div class="entete">
+      <h2 id="titre-jeux">Online games</h2>
+      <a class="pastille-lien" href="status.html">All servers</a>
+    </div>
+    <ul class="jaquettes" id="jaquettes">
+      <!-- rempli par rework.js ; ces six cartes servent de repli sans réseau -->
+    </ul>
+  </section>
 
-        <!-- Game 2: SSBU -->
-        <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 space-y-4 hover:border-amber-800/60 transition group">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold px-2.5 py-1 rounded bg-amber-950/60 text-amber-400 border border-amber-800/40">NEX Engine</span>
-            <span class="text-xs text-emerald-400 font-mono">Port :60005 UDP</span>
-          </div>
-          <div>
-            <h3 class="font-bold text-lg text-white group-hover:text-amber-300 transition">Super Smash Bros. Ultimate</h3>
-            <p class="text-xs text-slate-400">Versi: v13.0.2 - v13.0.3</p>
-          </div>
-          <div class="pt-3 border-t border-slate-800/80 flex justify-between text-xs text-slate-400">
-            <span>Battle Arena: <b class="text-emerald-400">Aktif</b></span>
-            <span>Room: <b class="text-white">Live</b></span>
-          </div>
-        </div>
-
-        <!-- Game 3: Splatoon 2 -->
-        <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 space-y-4 hover:border-purple-800/60 transition group">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold px-2.5 py-1 rounded bg-purple-950/60 text-purple-400 border border-purple-800/40">NEX Engine</span>
-            <span class="text-xs text-emerald-400 font-mono">Port :60004 UDP</span>
-          </div>
-          <div>
-            <h3 class="font-bold text-lg text-white group-hover:text-purple-300 transition">Splatoon 2</h3>
-            <p class="text-xs text-slate-400">Versi: v5.5.1</p>
-          </div>
-          <div class="pt-3 border-t border-slate-800/80 flex justify-between text-xs text-slate-400">
-            <span>Private Battle: <b class="text-emerald-400">Aktif</b></span>
-            <span>Room: <b class="text-white">Live</b></span>
-          </div>
-        </div>
+  <!-- 2b. La progression de chaque jeu, comme la section Progression du vrai site -->
+  <section class="plaque" id="progres" aria-labelledby="titre-progres">
+    <div class="entete">
+      <h2 id="titre-progres">Progress</h2>
+      <p class="petit-texte">How much of each game's online play works today.</p>
+    </div>
+    <div class="progres-grille">
+      <div class="anneau" id="anneau" role="img" aria-label="Overall progress">
+        <span class="anneau-valeur"><strong id="anneau-pct">0%</strong><small>overall</small></span>
       </div>
-    </section>
+      <ul class="progres-liste" id="progres-liste"></ul>
+    </div>
+  </section>
 
-    <!-- Setup Guide Section -->
-    <section id="guide" class="bg-slate-900/40 border border-slate-800 rounded-3xl p-8 sm:p-10 space-y-6">
-      <div class="space-y-1">
-        <h2 class="text-2xl font-bold text-white tracking-tight">Panduan Setup MicroSD (Plug & Play)</h2>
-        <p class="text-sm text-slate-400">Dua langkah mudah untuk menghubungkan konsol Switch CFW Anda ke HorizonLink</p>
-      </div>
+  <!-- 3. La phrase du projet -->
+  <section class="bandeau" aria-label="The project">
+    <img src="assets/img/HorizonLink.png" alt="" width="56" height="56">
+    <p>HorizonLink is a second home for Switch online play: an independent network that keeps your games connected, free and ad-free, run by and for the community.</p>
+    <div class="defile" role="region" aria-label="Supported games"><ul class="defile-piste" id="defile-jeux"></ul></div>
+  </section>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-        <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-3">
-          <div class="w-8 h-8 rounded-lg bg-cyan-950 border border-cyan-800/50 flex items-center justify-center font-bold text-cyan-400 text-sm">1</div>
-          <h3 class="font-bold text-white">Ekstrak Paket SD Card</h3>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            Unduh file <code class="text-cyan-300">HorizonLink-Switch-SDCard.zip</code> dari rilis terbaru. Ekstrak langsung ke direktori paling luar (root) microSD Anda. File hosts <code class="text-slate-300">emummc.txt</code> dan homebrew <code class="text-slate-300">HorizonLink.nro</code> otomatis terpasang rapi.
-          </p>
+  <!-- 4. Le fonctionnement : une grande carte, puis une grande et deux petites -->
+  <section class="plaque" id="fonctionnement" aria-labelledby="titre-fonctionnement">
+    <article class="carte carte--large carte--chemin">
+      <h2 id="titre-fonctionnement">Your game talks to our servers just like it talked to Nintendo’s.</h2>
+      <ol class="chemin">
+        <li><strong>Your game</strong><span>Ryujinx, Citron or a Switch with CFW. The game itself is not modified.</span></li>
+        <li><strong>Your HorizonLink account</strong><span>It stands in for the Nintendo account: identity, friends and a signed token.</span></li>
+        <li><strong>The match</strong><span>Our servers find your opponents, then the match runs directly between players.</span></li>
+      </ol>
+    </article>
+    <div class="mosaique">
+      <article class="carte carte--haute carte--amis">
+        <div class="pile" aria-hidden="true">
+          <img src="/api/game-icon/0100152000022000.jpg" alt="">
+          <img src="/api/game-icon/0100c2500fc20000.jpg" alt="">
+          <img src="/api/game-icon/01006a800016e000.jpg" alt="">
+          <img src="/api/game-icon/01006f8002326000.jpg" alt="">
+          <img src="/api/game-icon/01009b90006dc000.jpg" alt="">
         </div>
+        <h3>Your friends, everywhere</h3>
+        <p>One username, one permanent friend code and a single friend list for all your games. See who is playing what, and join in.</p>
+      </article>
+      <article class="carte carte--gratuit">
+        <h3>Free, for real</h3>
+        <p>A volunteer project. No subscription, no ads.</p>
+      </article>
+      <article class="carte carte--prive">
+        <h3>Your data stays yours</h3>
+        <p>Only what the service needs to run. No tracking, no selling.</p>
+      </article>
+    </div>
+  </section>
 
-        <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-3">
-          <div class="w-8 h-8 rounded-lg bg-cyan-950 border border-cyan-800/50 flex items-center justify-center font-bold text-cyan-400 text-sm">2</div>
-          <h3 class="font-bold text-white">Tautkan Akun via Homebrew</h3>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            Nyalakan Switch, buka Homebrew Menu (Album), jalankan <b class="text-white">HorizonLink</b>. Masukkan email & password akun yang telah Anda daftarkan di portal ini. Selesai! Buka game favorit dan mulai mabar.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Registration Section -->
-    <section id="register" class="bg-gradient-to-b from-slate-900/80 to-slate-950 border border-slate-800 rounded-3xl p-8 sm:p-12 max-w-2xl mx-auto space-y-6">
-      <div class="text-center space-y-2">
-        <h2 class="text-2xl font-bold text-white tracking-tight">Pendaftaran Akun HorizonLink</h2>
-        <p class="text-sm text-slate-400">Buat akun untuk mendapatkan Friend Code dan akses matchmaking online</p>
-      </div>
-      <form class="space-y-4" onsubmit="event.preventDefault(); alert('Pendaftaran berhasil! Akun telah terintegrasi dengan backend HorizonLink.');">
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Username Pemain</label>
-          <input type="text" placeholder="Contoh: ZeyrannPlayer" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 transition" required />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email</label>
-          <input type="email" placeholder="nama@email.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 transition" required />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Kata Sandi</label>
-          <input type="password" placeholder="Minimal 8 karakter" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 transition" required />
-        </div>
-        <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-cyan-600/25">
-          Daftarkan Akun & Buat Friend Code
-        </button>
-      </form>
-    </section>
-
-    <!-- Donation Section -->
-    <section id="donate" class="bg-gradient-to-r from-amber-950/20 via-slate-900/60 to-amber-950/20 border border-amber-800/40 rounded-3xl p-8 sm:p-10 text-center max-w-3xl mx-auto space-y-4">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/50 border border-amber-700/40 text-amber-400 text-xs font-semibold">
-        ☕ Dukungan Komunitas
-      </div>
-      <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Dukung Keberlangsungan Server HorizonLink</h2>
-      <p class="text-slate-400 text-sm leading-relaxed max-w-xl mx-auto">
-        HorizonLink beroperasi 24/7 secara mandiri tanpa iklan dan tanpa biaya langganan. Setiap donasi dari kamu sangat berharga untuk biaya sewa server VPS, bandwidth, dan pengembangan game baru.
-      </p>
-      <div class="pt-2">
-        <a href="https://trakteer.id/zeyrann" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold px-7 py-3.5 rounded-xl transition shadow-lg shadow-amber-600/30">
-          <span>☕</span> Traktir Cendol di Trakteer Zeyrann
+  <!-- 5. Où jouer : trois plateformes, chacune avec son appareil en 3D -->
+  <section class="plaque" id="plateformes" aria-labelledby="titre-plateformes">
+    <div class="entete">
+      <h2 id="titre-plateformes">Where to find HorizonLink</h2>
+      <a class="pastille-lien" href="telecharger.html">All downloads</a>
+    </div>
+    <ul class="plateformes">
+      <li>
+        <span class="type">Emulator</span>
+        <a class="plateforme plateforme--emu" href="telecharger.html">
+          <canvas class="plateforme-3d" data-modeles="assets/models/retro_computer.glb" data-opaque aria-label="3D computer" role="img"></canvas>
+          <span class="plateforme-logos"><img src="assets/img/plateformes/ryujinx.png" alt="" width="34" height="34"><img src="assets/img/plateformes/citron.png" alt="" width="34" height="34"></span>
+          <strong>Ryujinx HorizonLink and Citron HorizonLink</strong>
+          <span>Two emulators set up for the network, on Windows, Linux and macOS, with the same account.</span>
         </a>
-      </div>
-      <p class="text-[11px] text-slate-500">Donatur berkesempatan mendapatkan badge khusus dan role Supporter di komunitas.</p>
-    </section>
-  </main>
+      </li>
+      <li>
+        <span class="type">Console</span>
+        <a class="plateforme plateforme--switch" href="telecharger.html">
+          <canvas class="plateforme-3d" data-modeles="assets/models/nintendo_switch.glb" data-y="0.45" aria-label="3D Nintendo Switch" role="img"></canvas>
+          <strong>Switch with CFW</strong>
+          <span>Turn on the HorizonLink profile. Fully reversible.</span>
+        </a>
+      </li>
+      <li>
+        <span class="type">Companion app</span>
+        <a class="plateforme plateforme--tel" href="telecharger.html">
+          <canvas class="plateforme-3d" data-modeles="assets/models/iphone.glb|assets/models/samsung_s22_ultra.glb" data-orient="|90,0,0" aria-label="3D iPhone and Android phone" role="img"></canvas>
+          <span class="plateforme-logos"><img src="assets/img/plateformes/app-ios.png" alt="" width="34" height="34"></span>
+          <strong>HorizonLink app</strong>
+          <span>On iPhone and Android: your friends, your activity and your saves.</span>
+        </a>
+      </li>
+    </ul>
+  </section>
 
-  <!-- Footer -->
-  <footer class="border-t border-slate-800/80 bg-slate-950 py-8 text-center text-xs text-slate-500">
-    <p>HorizonLink &bull; Inisiatif open-source jaringan alternatif untuk komunitas Nintendo Switch CFW.</p>
-    <p class="mt-1">Ditenagai oleh stack nextendo core, dikonfigurasi & dikembangkan untuk komunitas lokal.</p>
-  </footer>
+  <!-- 5b. En ligne en quatre etapes (vraie sequence : les numeros ont un sens) -->
+  <section class="plaque" id="etapes" aria-labelledby="titre-etapes">
+    <div class="entete">
+      <h2 id="titre-etapes">Online in four steps</h2>
+      <p class="petit-texte">On an emulator or a real Switch with CFW. Your HorizonLink account is the key, and everything is reversible.</p>
+    </div>
+    <ol class="quatre-etapes">
+      <li><strong>Create your HorizonLink account</strong><span>Free, in three fields. You get a permanent username and friend code right away.</span><a class="lien" href="register.html">Create my account</a></li>
+      <li><strong>Get Ryujinx or Citron HorizonLink</strong><span>The emulator builds set up for the network. On a Switch with CFW, turn on the HorizonLink profile instead.</span><a class="lien" href="telecharger.html">Downloads</a></li>
+      <li><strong>Sign in to HorizonLink</strong><span>In Ryujinx: Actions, then HorizonLink sign-in, then type your e-mail and password.</span></li>
+      <li><strong>Play online</strong><span>Launch Mario Kart 8, Splatoon or Smash Ultimate, open the online menu and meet the community.</span></li>
+    </ol>
+  </section>
+
+  <!-- 6. L'état du réseau, en direct -->
+  <section class="plaque plaque--etat" id="etat" aria-labelledby="titre-etat">
+    <div class="entete">
+      <h2 id="titre-etat">Network status</h2>
+      <p class="maj" id="etat-maj" aria-live="polite">Updating…</p>
+    </div>
+    <div class="etat">
+      <div class="etat-total">
+        <strong id="etat-total">…</strong>
+        <span>players connected</span>
+      </div>
+      <ul class="barres" id="barres"></ul>
+    </div>
+  </section>
+
+  <!-- 7. L'equipe -->
+  <section class="plaque" id="equipe" aria-labelledby="titre-equipe">
+    <div class="entete">
+      <h2 id="titre-equipe">Meet the Team</h2>
+      <p class="petit-texte">HorizonLink runs on volunteer work. These are the people keeping it online.</p>
+    </div>
+    <ul class="equipe" id="equipe-liste"></ul>
+    <div class="staff-bande" id="staff-bande" hidden>
+      <div class="staff-fenetre"><ul class="staff-piste" id="staff-piste"></ul></div>
+    </div>
+  </section>
+
+  <!-- 8. Questions frequentes -->
+  <section class="plaque" id="faq" aria-labelledby="titre-faq">
+    <h2 id="titre-faq" class="entete">Frequently asked questions</h2>
+    <div class="faq">
+      <details class="faq-q"><summary>Is HorizonLink affiliated with Nintendo?</summary><p>No. HorizonLink is an independent community project, with no affiliation, sponsorship or endorsement from Nintendo Co., Ltd.</p></details>
+      <details class="faq-q"><summary>Do I have to provide games?</summary><p>HorizonLink doesn't distribute games, ROMs or keys. It only provides network services: you stay responsible for your own copies.</p></details>
+      <details class="faq-q"><summary>Which emulators are supported?</summary><p>Ryujinx HorizonLink and Citron HorizonLink, plus a real Switch running custom firmware. More may follow as the community contributes.</p></details>
+      <details class="faq-q"><summary>What do you do with my data?</summary><p>Only what the service needs to run. No tracking, no selling. The code is open, so you can check it.</p></details>
+      <details class="faq-q"><summary>How can I contribute?</summary><p>Code, translations, compatibility testing or moderation: everything helps. Join the repository and the community server to start.</p></details>
+    </div>
+  </section>
+
+  <!-- 9. Appel final -->
+  <section class="plaque appel-final" aria-labelledby="titre-appel">
+    <div>
+      <h2 id="titre-appel">Ready to reconnect your Switch?</h2>
+      <p class="petit-texte">Follow the development, join the community and start your first online match.</p>
+    </div>
+    <div class="actions">
+      <a class="bouton bouton--plein bord-etoile" href="register.html">Create my account</a>
+      <a class="bouton bouton--verre" href="login.html">Sign in</a>
+    </div>
+  </section>
+
+</main>
+
+<div id="nx-pied"></div>
+
+<script src="assets/js/sm3dw-counts.js?v=20261003a" defer></script>
+<script src="assets/js/nx.js?v=20261002b" defer></script>
+<script src="assets/js/commun.js?v=20261007p" defer></script>
+<script src="assets/js/rework.js?v=20261008a" defer></script>
+<script type="module" src="assets/js/plateformes3d.js?v=20260928b"></script>
+<script src="assets/js/effets.js?v=20260928b" defer></script>
 </body>
 </html>

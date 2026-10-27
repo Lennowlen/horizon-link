@@ -1,0 +1,727 @@
+﻿// HorizonLink Developers portal, rework. LIVE data: /api/developers/applications
+// (list, create, detail, save, delete), collaborators, bot/secret reset,
+// user search and invitation accept, all with the player's session.
+// GATE: the landing page is public, but the space and applications need sign-in.
+
+(function () {
+  "use strict";
+  var calme = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var tf = function () { return window.nxF ? window.nxF.apply(null, arguments) : [].slice.call(arguments, 1).reduce(function (s, v, i) { return s.replace("{" + i + "}", v); }, arguments[0]); };
+
+  var $ = function (id) { return document.getElementById(id); };
+  function el(tag, cls, texte) { var e = document.createElement(tag); if (cls) e.className = cls; if (texte != null) e.textContent = texte; return e; }
+  function toast(t) { var x = $("toast"); x.textContent = t; x.classList.add("visible"); clearTimeout(toast.m); toast.m = setTimeout(function () { x.classList.remove("visible"); }, 2600); }
+  var CODES = {
+    dev_conditions: "HorizonLink Developers needs a verified e-mail and a linked Discord account. You can set both up on your account page.",
+    app_limit: "You've reached the limit of 5 applications.",
+    name_reserved: "This name is reserved to HorizonLink or imitates an official application.",
+    logo_reserved: "This icon belongs to an official application."
+  };
+  function erreur(m) {
+    var c = m && m.data && m.data.code;
+    if (c && CODES[c]) return window.nxT ? window.nxT(CODES[c]) : CODES[c];
+    return (m && m.message) || "Something went wrong. Try again.";
+  }
+  function copier(texte, quoi) { if (navigator.clipboard) navigator.clipboard.writeText(texte); toast(quoi ? tf("{0} copied to the clipboard", window.nxT ? window.nxT(quoi) : quoi) : tf("Copied to the clipboard")); }
+  function echapper(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  // --- Live storage: the account server owns the applications ------------------------------
+
+  var applis = [];
+  // Some logos are stored as bare base64 (no "data:" prefix): the browser cannot show that as an
+  // image. Recognise the format from its first bytes and add the prefix.
+  function logoUrl(v) {
+    v = String(v || "").trim();
+    var type = /^\/9j\//.test(v) ? "jpeg" : /^iVBOR/.test(v) ? "png" : /^R0lGOD/.test(v) ? "gif" : /^UklGR/.test(v) ? "webp" : "";
+    if (type) return "data:image/" + type + ";base64," + v;
+    return /^(data:image\/|https?:\/\/|\/)/.test(v) ? v : "";
+  }
+  function norme(a) {
+    var rp = a.rich_presence || {};
+    return {
+      id: a.client_id, nom: a.name || "Application", desc: a.description || "",
+      publique: !!(a.is_public != null ? a.is_public : a.public),
+      secret: "", icone: logoUrl(a.logo_b64 || a.logo_url || a.logo),
+      cgu: a.terms_url || "", confidentialite: a.privacy_url || "",
+      redirections: (a.redirect_uris || []).slice(),
+      permissions: (a.scopes || []).slice(),
+      botPerms: a.bot_permissions || [],
+      bot: { nom: (a.name || "Application") + " Bot", jeton: "", prefixe: a.bot_token_prefix || "" },
+      rp: { jeu: rp.app_id || rp.game || "0100152000022000", details: rp.details || "", statut: rp.status || "playing", chrono: rp.timer !== false },
+      membres: [], cree: a.created_at || "",
+      // Players who accepted the application, each counted once; the creator and the
+      // collaborators don't count. 250 unlock Switch news, 500 give the creator the badge.
+      acceptations: a.acceptations || 0, seuilNews: a.seuil_news || 250, seuilBadge: a.seuil_badge || 500,
+      // Emulateur officiel (Ryujinx, Citron) : il se connecte avec son jeton en ligne, pas un jeton
+      // OAuth, et sa presence vient du jeu lance. Les reglages Rich Presence ne le concernent pas.
+      officiel: !!a.is_official, role: a.user_role || "", networkAdmin: !!a.network_admin,
+      moderationWarning: a.moderation_warning || "", suspended: !!a.suspended,
+      suspensionReason: a.suspension_reason || "",
+      emulateur: !!a.is_official && (a.redirect_uris || []).length > 0 && (a.redirect_uris || []).every(function (u) { return /^http:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(u); })
+    };
+  }
+  function charge() {
+    return NX.api("/api/developers/applications", null, "GET").then(function (d) {
+      applis = (d.applications || []).map(norme);
+      return applis;
+    });
+  }
+  function chargeAppli(id) {
+    return NX.api("/api/developers/applications/" + encodeURIComponent(id), null, "GET").then(function (d) {
+      var a = norme(d.application || d);
+      if (d.user_role) a.role = d.user_role;
+      a.networkAdmin = !!d.network_admin;
+      if (d.acceptations != null) { a.acceptations = d.acceptations; a.seuilNews = d.seuil_news || a.seuilNews; a.seuilBadge = d.seuil_badge || a.seuilBadge; }
+      var i = applis.findIndex(function (x) { return x.id === a.id; });
+      if (i >= 0) applis[i] = a; else applis.unshift(a);
+      return a;
+    });
+  }
+  function trouver(id) { return applis.filter(function (a) { return a.id === id; })[0]; }
+
+  var moi = { pseudo: "Developer", pid: 0 };
+  function espaceExigeSession() {
+    if (!window.NX || !NX.token) { location.replace("login.html?next=" + encodeURIComponent("developers.html#/espace")); return false; }
+    return true;
+  }
+
+  // --- Scopes and API permissions (same lists as the live portal) --------------------------
+
+  // Only the scopes a third-party application can actually use. Cloud saves, account management
+  // and console linking are reserved to official HorizonLink applications (the server refuses them).
+  var SCOPES = ["identity", "friends", "presence", "profil", "game.matchmaking", "mods.favorites", "history", "splatoon:read", "stats:read", "modstore:read", "catalog:read", "rpc", "emulator.status"];
+  // What a bot token can do today: /api/stats and /api/profile (players who authorized the app).
+  var PERMISSIONS = [["stats:read", "Network statistics"], ["identity", "Player profile (username, friend code, avatar)"]];
+  var ONGLETS = [
+    ["general", "General information"], ["install", "Installation", "NEW"], ["oauth", "General & redirects"], ["urlgen", "URL generator"],
+    ["bot", "Bot & API keys", "NEW"], ["news", "Switch news", "NEW"], ["testeurs", "Application testers"], ["moderation", "Moderation"], ["danger", "Danger zone"]
+  ];
+  // "Danger zone" only shows for the application's creator, and never for an official application.
+  function peutSupprimer(a) { return a.role === "owner" && !a.officiel; }
+
+  // --- Router ------------------------------------------------------------------------------
+
+  // In an application, the space menu slides out to the left and the application's settings
+  // take its place; leaving the application brings the space menu back.
+  // Opening or leaving an application swaps the sidebar menu AND the page together: both slide
+  // out, both change in the same frame, both slide in. A click during the slide cancels the
+  // pending swap, so the menu can never lag behind the page.
+  var bascule = null;
+  function montrer(vue, sousVue) {
+    var espace = $("menu-espace"), appli = $("menu-appli"), contenu = document.querySelector(".espace-contenu");
+    var dansAppli = sousVue === "appli";
+    var entrant = dansAppli ? appli : espace, sortant = dansAppli ? espace : appli;
+    var animer = !calme && vue === "espace" && !$("vue-espace").hidden && entrant.hidden && !sortant.hidden;
+    var appliquer = function () {
+      bascule = null;
+      [espace, appli, contenu].forEach(function (x) { x.classList.remove("sort-gauche", "entre-droite"); });
+      sortant.hidden = true;
+      entrant.hidden = false;
+      document.querySelectorAll(".vue").forEach(function (v) { v.hidden = v.id !== "vue-" + vue; });
+      document.querySelectorAll(".sous-vue").forEach(function (v) { v.hidden = v.id !== "sv-" + sousVue; });
+      document.querySelectorAll("[data-route]").forEach(function (a) {
+        a.classList.toggle("est-actif", a.dataset.route === vue || a.dataset.route === sousVue);
+      });
+      if (animer) [entrant, contenu].forEach(function (x) { void x.offsetWidth; x.classList.add("entre-droite"); });
+    };
+    if (bascule) { clearTimeout(bascule); bascule = null; }
+    if (!animer) { appliquer(); return; }
+    sortant.classList.add("sort-gauche");
+    contenu.classList.add("sort-gauche");
+    bascule = setTimeout(appliquer, 220);
+  }
+  var ongletCourant = null, brouillon = null;
+  function route() {
+    var parts = (location.hash.replace(/^#\/?/, "") || "").split("/");
+    if (!parts[0]) { montrer("accueil"); return; }
+    if (!espaceExigeSession()) return;
+    if (parts[0] === "espace") {
+      charge().then(function () {
+        montrer("espace", "espace");
+        dessinerCartes($("recentes"), applis.slice(0, 4), true);
+      }).catch(function (e) {
+        montrer("espace", "espace");
+        $("recentes").innerHTML = "";
+        $("recentes").appendChild(el("div", "vide-bloc vide-applis", "Could not load your space: " + erreur(e)));
+      });
+      return;
+    }
+    if (parts[0] === "applis" && !parts[1]) {
+      charge().then(function () { montrer("espace", "applis"); dessinerListe(); }).catch(function (e) {
+        montrer("espace", "applis");
+        $("applis").innerHTML = "";
+        $("applis").appendChild(el("div", "vide-bloc vide-applis", "Could not load your applications: " + erreur(e)));
+      });
+      return;
+    }
+    if (parts[0] === "applis") {
+      chargeAppli(parts[1]).then(function (a) {
+        montrer("espace", "appli");
+        ouvrirAppli(a, parts[2] || "general");
+      }).catch(function () { location.hash = "#/applis"; });
+      return;
+    }
+    montrer("accueil");
+  }
+
+  // --- Landing features --------------------------------------------------------------------
+
+  var ICO = {
+    social: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="9.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.8-3 3-4.6 5.5-4.6s4.7 1.6 5.5 4.6M15 14.3c2.6-.2 4.4 1.2 5.2 3.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    cloud: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+    rp: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    bot: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="5" y="8" width="14" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8V5M9.5 13h.01M14.5 13h.01" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    oauth: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>'
+  };
+  $("atouts").innerHTML = [
+    ["social", "Social SDK and friends", "Read the player's friend list and who is online, with their consent."],
+    ["rp", "Presence", "Show friends which game the player is in, from your own application."],
+    ["bot", "Bot tokens", "Read network statistics from a server or a Discord bot, without a player."],
+    ["oauth", "OAuth 2.0 and PKCE", "Standard sign-in. Players type their password on HorizonLink.network, never in your app."]
+  ].map(function (x) { return '<article class="atout"><span class="atout-ico">' + ICO[x[0]] + "</span><h3>" + x[1] + "</h3><p>" + x[2] + "</p></article>"; }).join("");
+
+  // --- Application cards -------------------------------------------------------------------
+
+  function icone(a, taille) {
+    var s = el("span", "appli-ico");
+    if (taille) { s.style.width = s.style.height = taille + "px"; }
+    var lettre = function () { s.textContent = a.nom.charAt(0).toUpperCase(); };
+    if (a.icone) {
+      var im = el("img"); im.alt = "";
+      im.addEventListener("error", lettre);   // an unreadable logo shows the initial, not a broken image
+      im.src = a.icone; s.appendChild(im);
+    } else lettre();
+    return s;
+  }
+  function pastilleAcceptations(a) {
+    var n = a.acceptations || 0;
+    var s = el("span", "pastille-acceptations", tf(n > 1 ? "{0} players accepted" : "{0} player accepted", n));
+    s.title = "Each player counts once. The creator and the collaborators don't count.";
+    return s;
+  }
+
+  function dessinerCartes(hote, liste, recentes) {
+    hote.innerHTML = "";
+    if (!liste.length) {
+      var v = el("div", "vide-bloc vide-applis");
+      v.innerHTML = "<strong>No applications yet.</strong><span>Create one to get a client ID for OAuth sign-in.</span>";
+      var b = el("button", "bouton bouton--plein petit-bouton", "New application"); b.type = "button"; b.addEventListener("click", nouvelle);
+      v.appendChild(b);
+      hote.appendChild(v);
+      return;
+    }
+    liste.forEach(function (a) {
+      var c = el("a", "carte-appli"); c.href = "#/applis/" + a.id + "/general";
+      c.appendChild(icone(a, 64));
+      var t = el("div"); t.append(el("strong", "", a.nom), el("small", "", a.publique ? "Public client, PKCE" : "Confidential client"), pastilleAcceptations(a));
+      c.appendChild(t);
+      hote.appendChild(c);
+    });
+  }
+  function dessinerListe() {
+    var q = $("applis-recherche").value.trim().toLowerCase();
+    var liste = applis.filter(function (a) { return !q || a.nom.toLowerCase().indexOf(q) >= 0; });
+    if ($("applis-tri").value === "nom") liste.sort(function (a, b) { return a.nom.localeCompare(b.nom, "en"); });
+    $("applis-compte").textContent = applis.length;
+    dessinerCartes($("applis"), liste, false);
+  }
+  $("applis-recherche").addEventListener("input", dessinerListe);
+  $("applis-tri").addEventListener("change", dessinerListe);
+
+  // --- New application ---------------------------------------------------------------------
+
+  function nouvelle() {
+    if (!espaceExigeSession()) return;
+    $("form-nouvelle").reset(); $("n-compte").textContent = "0 / 400"; $("dlg-nouvelle").showModal(); $("n-nom").focus();
+  }
+  document.querySelectorAll("[data-nouvelle-appli]").forEach(function (b) { b.addEventListener("click", nouvelle); });
+  $("n-desc").addEventListener("input", function () { $("n-compte").textContent = $("n-desc").value.length + " / 400"; });
+  $("form-nouvelle").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var nom = $("n-nom").value.trim();
+    if (!nom) return;
+    var btn = $("form-nouvelle").querySelector('button[type="submit"]');
+    btn.disabled = true;
+    NX.api("/api/developers/applications", {
+      name: nom, description: $("n-desc").value.trim(),
+      public: $("n-publique").checked,
+      redirect_uris: ["http://127.0.0.1:47823/callback"],
+      scopes: ["identity", "friends"]
+    }).then(function (d) {
+      var a = norme(d.application || d);
+      applis.unshift(a);
+      $("dlg-nouvelle").close();
+      toast(tf("{0} created", nom));
+      location.hash = "#/applis/" + a.id + "/general";
+    }).catch(function (err) { toast(erreur(err)); }).then(function () { btn.disabled = false; });
+  });
+
+  // --- Delete confirmation: the button unlocks only once the exact name is typed ------------
+  $("sup-saisie").addEventListener("input", function () {
+    $("sup-ok").disabled = $("sup-saisie").value.trim() !== $("form-supprimer").dataset.nom;
+  });
+  $("form-supprimer").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var f = $("form-supprimer"), id = f.dataset.id, nom = f.dataset.nom;
+    if ($("sup-saisie").value.trim() !== nom) return;
+    $("sup-ok").disabled = true;
+    NX.api("/api/developers/applications/" + encodeURIComponent(id), null, "DELETE").then(function () {
+      applis = applis.filter(function (x) { return x.id !== id; });
+      $("dlg-supprimer").close();
+      toast(tf("{0} deleted", nom));
+      location.hash = "#/applis";
+    }).catch(function (err) { toast(erreur(err)); $("sup-ok").disabled = false; });
+  });
+
+  // --- Application detail: tabs ------------------------------------------------------------
+
+  function ouvrirAppli(a, onglet) {
+    $("ap-titre").textContent = a.nom;
+    var tete = $("menu-appli-tete");
+    tete.innerHTML = "";
+    tete.appendChild(icone(a, 40));
+    var nt = el("div"); nt.append(el("strong", "", a.nom), el("small", "petit", a.publique ? "Public client" : "Confidential client"), pastilleAcceptations(a));
+    tete.appendChild(nt);
+    var nav = $("onglets-v");
+    nav.innerHTML = "";
+    if (onglet === "danger" && !peutSupprimer(a)) onglet = "general";
+    if (onglet === "moderation" && (!a.networkAdmin || a.officiel)) onglet = "general";
+    if (!PANNEAUX[onglet]) onglet = "general";
+    ONGLETS.forEach(function (o) {
+      if (o[0] === "danger" && !peutSupprimer(a)) return;
+      if (o[0] === "moderation" && (!a.networkAdmin || a.officiel)) return;
+      var l = el("a", "onglet-v" + (o[0] === "danger" ? " onglet-v--danger" : ""));
+      l.href = "#/applis/" + a.id + "/" + o[0];
+      l.textContent = o[1];
+      if (o[2]) l.appendChild(el("span", "nouveau", o[2]));
+      if (o[0] === onglet) l.setAttribute("aria-current", "page");
+      nav.appendChild(l);
+    });
+    ongletCourant = onglet;
+    brouillon = JSON.parse(JSON.stringify(a));
+    $("barre-sauver").hidden = true;
+    var p = $("panneaux");
+    p.innerHTML = "";
+    p.classList.remove("entre"); void p.offsetWidth; p.classList.add("entre");
+    (PANNEAUX[onglet] || PANNEAUX.general)(p, a);
+  }
+  // Any field edit shows the save bar; Save writes the draft, Reset reverts it.
+  function modifie() { $("barre-sauver").hidden = false; }
+  $("annuler-modifs").addEventListener("click", function () {
+    chargeAppli(brouillon.id).then(function (a) { ouvrirAppli(a, ongletCourant); toast("Changes reverted"); }).catch(function (e) { toast(erreur(e)); });
+  });
+  $("sauver-modifs").addEventListener("click", function () {
+    var btn = $("sauver-modifs");
+    btn.disabled = true;
+    var payload = {
+      name: brouillon.nom, description: brouillon.desc, public: brouillon.publique,
+      scopes: brouillon.permissions, bot_permissions: brouillon.botPerms,
+      redirect_uris: brouillon.redirections, logo_b64: brouillon.icone || "",
+      terms_url: brouillon.cgu || "", privacy_url: brouillon.confidentialite || "",
+      rich_presence: { app_id: brouillon.rp.jeu, details: brouillon.rp.details, status: brouillon.rp.statut }
+    };
+    NX.api("/api/developers/applications/" + encodeURIComponent(brouillon.id), payload, "PUT").then(function (d) {
+      var a = norme(d.application || d);
+      var i = applis.findIndex(function (x) { return x.id === a.id; });
+      if (i >= 0) applis[i] = a;
+      $("barre-sauver").hidden = true;
+      ouvrirAppli(a, ongletCourant);
+      if (d && d.client_secret) { copier(d.client_secret, "New secret"); toast("Confidential client: new secret copied, it won't be shown again"); }
+      else toast("Changes saved");
+    }).catch(function (e) { toast(erreur(e)); }).then(function () { btn.disabled = false; });
+  });
+
+  function titre(p, t, sous) { p.appendChild(el("h2", "titre-plaque", t)); if (sous) p.appendChild(el("p", "petit intro-panneau", sous)); }
+  // The client secret is never sent back by the server: only reset shows a new one, once.
+  function panneauSecret(p) {
+    var s = ligneCopie(p, "Client secret", "The secret is hidden. Reset to generate a new one.", "Client secret");
+    var reinit = el("button", "bouton bouton--sortie petit-bouton", "Reset the secret"); reinit.type = "button";
+    reinit.addEventListener("click", function () {
+      if (!confirm("Reset the client secret? The old one stops working immediately.")) return;
+      reinit.disabled = true;
+      NX.api("/api/developers/applications/" + encodeURIComponent(brouillon.id) + "/reset-secret", {}, "POST").then(function (res) {
+        brouillon.secret = res.client_secret || "";
+        s.value = brouillon.secret;
+        copier(brouillon.secret, "New secret");
+        toast("New secret generated and copied");
+      }).catch(function (e) { toast(erreur(e)); }).then(function () { reinit.disabled = false; });
+    });
+    p.appendChild(reinit);
+  }
+  function champ(p, libelle, valeur, auChangement, options) {
+    options = options || {};
+    var l = el("label", "champ"); l.appendChild(document.createTextNode(libelle));
+    var i = el(options.multi ? "textarea" : "input");
+    if (!options.multi) i.type = options.type || "text";
+    i.value = valeur || "";
+    if (options.placeholder) i.placeholder = options.placeholder;
+    if (options.max) i.maxLength = options.max;
+    if (options.lecture) i.readOnly = true;
+    i.addEventListener("input", function () { auChangement(i.value); modifie(); });
+    l.appendChild(i);
+    if (options.aide) l.appendChild(el("small", "", options.aide));
+    p.appendChild(l);
+    return i;
+  }
+  function ligneCopie(p, libelle, valeur, quoi, extras) {
+    var d = el("div", "champ"); d.appendChild(el("span", "", libelle));
+    var r = el("div", "ligne-copie");
+    var i = el("input"); i.readOnly = true; i.value = valeur; i.className = "mono";
+    r.appendChild(i);
+    var b = el("button", "bouton bouton--verre petit-bouton", "Copy"); b.type = "button";
+    b.addEventListener("click", function () { copier(i.value, quoi); });
+    r.appendChild(b);
+    (extras || []).forEach(function (x) { r.appendChild(x); });
+    d.appendChild(r);
+    p.appendChild(d);
+    return i;
+  }
+
+  function lienAutorisation(a, scopes, redirection) {
+    var u = "https://HorizonLink.network/oauth/authorize?client_id=" + encodeURIComponent(a.id) +
+      "&redirect_uri=" + encodeURIComponent(redirection || a.redirections[0] || "") + "&response_type=code&scope=" + encodeURIComponent((scopes || a.permissions).join(" "));
+    if (a.publique) u += "&code_challenge=YOUR_CODE_CHALLENGE&code_challenge_method=S256";
+    return u;
+  }
+
+  var PANNEAUX = {
+    general: function (p, a) {
+      titre(p, "General information", "The name and icon players see when they sign in with your application.");
+      var tete = el("div", "icone-edit");
+      var ic = icone(brouillon, 96); ic.id = "app-icon-preview-box"; tete.appendChild(ic);
+      var boutons = el("div", "ligne-boutons");
+      var up = el("label", "bouton bouton--verre petit-bouton", "Upload an icon"); up.style.cursor = "pointer";
+      var f = el("input"); f.type = "file"; f.accept = "image/*"; f.hidden = true; up.appendChild(f);
+      f.addEventListener("change", function () {
+        var fi = f.files && f.files[0]; if (!fi) return;
+        if (fi.size > 512 * 1024) { toast(window.nxT ? window.nxT("The icon can't be larger than 512 KB.") : "The icon can't be larger than 512 KB."); f.value = ""; return; }
+        var lecteur = new FileReader();
+        lecteur.onload = function () { brouillon.icone = lecteur.result; ic.replaceWith(ic = icone(brouillon, 96)); modifie(); };
+        lecteur.readAsDataURL(fi);
+      });
+      var ret = el("button", "bouton bouton--sortie petit-bouton", "Remove the icon"); ret.type = "button";
+      ret.addEventListener("click", function () { brouillon.icone = ""; ic.replaceWith(ic = icone(brouillon, 96)); modifie(); });
+      boutons.append(up, ret); tete.appendChild(boutons);
+      p.appendChild(tete);
+      champ(p, "Name *", brouillon.nom, function (v) { brouillon.nom = v; }, { max: 40 });
+      champ(p, "Description (maximum 400 characters)", brouillon.desc, function (v) { brouillon.desc = v; }, { multi: true, max: 400 });
+      ligneCopie(p, "Application ID", a.id, "Application ID");
+      if (!brouillon.publique) panneauSecret(p);
+      var m = el("div", "champ"); m.appendChild(el("span", "", "Security model"));
+      var lab = el("label", "modele");
+      var cb = el("input"); cb.type = "checkbox"; cb.checked = brouillon.publique;
+      cb.addEventListener("change", function () { brouillon.publique = cb.checked; modifie(); });
+      var t = el("span"); t.append(el("strong", "", "Public application (desktop / mobile, PKCE)"), el("small", "", "For desktop emulators and mobile apps: no client secret to keep or leak. Turn off for a server that can keep a secret."));
+      lab.append(cb, t); m.appendChild(lab); p.appendChild(m);
+      champ(p, "Terms of service (URL)", brouillon.cgu, function (v) { brouillon.cgu = v; }, { type: "url", placeholder: "https://example.com/terms" });
+      champ(p, "Privacy policy (URL)", brouillon.confidentialite, function (v) { brouillon.confidentialite = v; }, { type: "url", placeholder: "https://example.com/privacy" });
+    },
+
+    install: function (p, a) {
+      titre(p, "Installation and authorization", "The link that starts the sign-in, and how to plug it into your application.");
+      var regen = el("button", "bouton bouton--verre petit-bouton", "Regenerate"); regen.type = "button";
+      var i = ligneCopie(p, "OAuth 2.0 authorization link", lienAutorisation(a), "Authorization link", [regen]);
+      regen.addEventListener("click", function () { i.value = lienAutorisation(a); toast("Link regenerated from the current settings"); });
+      var test = el("a", "bouton bouton--plein petit-bouton", "Test the authorization live");
+      test.href = lienAutorisation(a).replace("YOUR_CODE_CHALLENGE", "preview"); test.target = "_blank"; test.rel = "noopener";
+      p.appendChild(test);
+      p.appendChild(el("h3", "sous-titre", "Integration guide for developers"));
+      var etapes = el("ol", "etapes-cfw");
+      [["Create a code verifier", "A random 43 to 128 character string, kept by your app. Its SHA-256, base64url-encoded, is the code challenge."],
+       ["Open the authorization link", "In the system browser, with your code_challenge. The player signs in on HorizonLink.network."],
+       ["Catch the redirect", "HorizonLink redirects to your redirect URI with ?code=. On desktop, listen on 127.0.0.1 with any free port."],
+       ["Exchange the code", "POST /oauth/token with the code and the code_verifier. You get an access token and a refresh token."]
+      ].forEach(function (x) { var li = el("li"); var d = el("div"); d.append(el("strong", "", x[0]), el("div", "petit", x[1])); li.appendChild(d); etapes.appendChild(li); });
+      p.appendChild(etapes);
+      var code = el("pre", "code-bloc");
+      code.textContent = "POST https://HorizonLink.network/oauth/token\nContent-Type: application/x-www-form-urlencoded\n\ngrant_type=authorization_code\n&client_id=" + a.id + "\n&code=CODE_FROM_REDIRECT\n&redirect_uri=" + (a.redirections[0] || "") + "\n&code_verifier=YOUR_CODE_VERIFIER";
+      p.appendChild(code);
+    },
+
+    oauth: function (p, a) {
+      titre(p, "OAuth2 redirects and scopes");
+      var info = el("div", "info-bloc");
+      info.innerHTML = 'HorizonLink only redirects to the addresses listed here. For desktop apps, <code>http://127.0.0.1:PORT/…</code> accepts any port. <a class="lien" href="https://wiki.HorizonLink.network/developers">Learn more about OAuth2</a>';
+      p.appendChild(info);
+      var liste = el("div", "redirections");
+      var dessiner = function () {
+        liste.innerHTML = "";
+        brouillon.redirections.forEach(function (r, k) {
+          var ligne = el("div", "ligne-copie");
+          var i = el("input"); i.value = r; i.placeholder = "https://example.com/callback"; i.setAttribute("aria-label", "Redirect URI " + (k + 1));
+          i.addEventListener("input", function () { brouillon.redirections[k] = i.value; modifie(); });
+          var x = el("button", "bouton bouton--sortie petit-bouton", "Remove"); x.type = "button";
+          x.addEventListener("click", function () { brouillon.redirections.splice(k, 1); dessiner(); modifie(); });
+          ligne.append(i, x); liste.appendChild(ligne);
+        });
+      };
+      dessiner();
+      p.appendChild(liste);
+      var ajouter = el("button", "bouton bouton--verre petit-bouton", "Add a redirect"); ajouter.type = "button";
+      ajouter.addEventListener("click", function () { brouillon.redirections.push(""); dessiner(); modifie(); liste.lastChild.querySelector("input").focus(); });
+      p.appendChild(ajouter);
+      if (!brouillon.publique) {
+        var s = el("button", "bouton bouton--sortie petit-bouton", "Reset the client secret"); s.type = "button";
+        s.addEventListener("click", function () {
+          if (!confirm("Reset the client secret? The old one stops working immediately.")) return;
+          s.disabled = true;
+          NX.api("/api/developers/applications/" + encodeURIComponent(brouillon.id) + "/reset-secret", {}, "POST").then(function (res) {
+            toast("New secret generated and copied");
+            if (res && res.client_secret) copier(res.client_secret, "New secret");
+          }).catch(function (e) { toast(erreur(e)); }).then(function () { s.disabled = false; });
+        });
+        p.appendChild(el("hr", "sep-panneau")); p.appendChild(s);
+      }
+    },
+
+    urlgen: function (p, a) {
+      titre(p, "OAuth2 URL generator", "Tick the scopes your application needs, pick a redirect, and copy the link.");
+      var choisis = a.permissions.filter(function (s) { return SCOPES.indexOf(s) >= 0; });
+      var grille = el("div", "portees");
+      var sortie;
+      var maj = function () { sortie.value = lienAutorisation(a, choisis, sel.value); };
+      SCOPES.forEach(function (s) {
+        var l = el("label", "portee");
+        var cb = el("input"); cb.type = "checkbox"; cb.value = s; cb.checked = choisis.indexOf(s) >= 0;
+        cb.addEventListener("change", function () { if (cb.checked) choisis.push(s); else choisis.splice(choisis.indexOf(s), 1); maj(); });
+        l.append(cb, el("strong", "mono", s)); grille.appendChild(l);
+      });
+      p.appendChild(grille);
+      var ls = el("label", "champ"); ls.appendChild(document.createTextNode("Redirect"));
+      var sel = el("select"); a.redirections.forEach(function (r) { var o = el("option", "", r); o.value = r; sel.appendChild(o); });
+      sel.addEventListener("change", maj);
+      ls.appendChild(sel); p.appendChild(ls);
+      sortie = ligneCopie(p, "Generated URL", "", "URL");
+      maj();
+    },
+
+    bot: function (p, a) {
+      titre(p, "Bot & HorizonLink API keys", "A bot token calls the HorizonLink API as your application, without a player.");
+      var tete = el("div", "icone-edit");
+      var av = icone({ nom: brouillon.bot.nom, icone: brouillon.icone }, 72); av.id = "bot-avatar-preview"; tete.appendChild(av);
+      var t = el("div"); t.append(el("strong", "", brouillon.bot.nom), el("div", "petit", tf("Bot user of {0}", a.nom)));
+      tete.appendChild(t); p.appendChild(tete);
+      var reset = el("button", "bouton bouton--sortie petit-bouton", "Reset the token"); reset.type = "button";
+      var jet = ligneCopie(p, "Token", brouillon.bot.prefixe ? tf("Token starting with {0}: reset to create a new one", brouillon.bot.prefixe) : "No token yet: reset to create one", "Token", [reset]);
+      reset.addEventListener("click", function () {
+        reset.disabled = true;
+        NX.api("/api/developers/applications/" + encodeURIComponent(brouillon.id) + "/reset-bot-token", {}, "POST").then(function (res) {
+          brouillon.bot.jeton = (res && res.bot_token) || "";
+          jet.value = brouillon.bot.jeton || "Token created but not returned. Reset again.";
+          if (brouillon.bot.jeton) copier(brouillon.bot.jeton, "Bot token");
+          toast("Shown once: copy it now");
+        }).catch(function (e) { toast(erreur(e)); }).then(function () { reset.disabled = false; });
+      });
+      p.appendChild(el("h3", "sous-titre", "API permissions"));
+      var liste = el("div", "permissions");
+      PERMISSIONS.forEach(function (x) {
+        var l = el("label", "portee" + (x[2] ? " est-verrouille" : ""));
+        var cb = el("input"); cb.type = "checkbox"; cb.disabled = !!x[2]; cb.checked = brouillon.botPerms.indexOf(x[0]) >= 0;
+        cb.addEventListener("change", function () {
+          var i = brouillon.botPerms.indexOf(x[0]);
+          if (cb.checked && i < 0) brouillon.botPerms.push(x[0]); if (!cb.checked && i >= 0) brouillon.botPerms.splice(i, 1);
+          modifie();
+        });
+        var s = el("span"); s.append(el("strong", "", x[1]), el("small", "mono", x[0] + (x[2] ? ", HorizonLink staff only" : "")));
+        l.append(cb, s); liste.appendChild(l);
+      });
+      p.appendChild(liste);
+      var doc = el("div", "info-bloc");
+      doc.innerHTML = "<strong>Documentation and code samples</strong><br><span class=\"petit\">Send the token as <code>Authorization: Bot &lt;token&gt;</code>.</span> <span class=\"petit\">Check a token with</span> <code>GET /api/bot/me</code>. <a class=\"lien\" href=\"https://wiki.HorizonLink.network/developers\">Read the documentation</a>";
+      p.appendChild(doc);
+    },
+
+    moderation: function (p, a) {
+      titre(p, "Application moderation", "Only HorizonLink administrators can change these settings. The reasons are shown to players.");
+      p.appendChild(el("p", "info-bloc", a.suspended ? "Suspended: " + a.suspensionReason : "Active"));
+
+      function action(kind, reason, button) {
+        button.disabled = true;
+        NX.api("/api/developers/applications/" + encodeURIComponent(a.id) + "/moderation",
+          { action: kind, reason: reason || "" }, "POST")
+          .then(function () { return chargeAppli(a.id); })
+          .then(function (updated) { ouvrirAppli(updated, "moderation"); toast("Moderation updated"); })
+          .catch(function (e) { toast(erreur(e)); button.disabled = false; });
+      }
+      function reasonField(label, value) {
+        var field = el("label", "champ", label);
+        var input = el("textarea"); input.value = value; input.maxLength = 500;
+        field.appendChild(input); p.appendChild(field);
+        return input;
+      }
+      var warning = reasonField("Warning shown on the OAuth consent screen", a.moderationWarning);
+      var setWarning = el("button", "bouton", "Save warning"); setWarning.type = "button";
+      setWarning.addEventListener("click", function () { action("set_warning", warning.value.trim(), setWarning); });
+      p.appendChild(setWarning);
+      if (a.moderationWarning) {
+        var clearWarning = el("button", "bouton bouton--verre", "Remove warning"); clearWarning.type = "button";
+        clearWarning.addEventListener("click", function () { action("clear_warning", "", clearWarning); });
+        p.appendChild(clearWarning);
+      }
+
+      if (a.suspended) {
+        var resume = el("button", "bouton", "Resume application"); resume.type = "button";
+        resume.addEventListener("click", function () { action("resume", "", resume); });
+        p.appendChild(resume);
+      } else {
+        var reason = reasonField("Reason shown when sign-in is blocked", "");
+        var suspend = el("button", "bouton bouton--danger", "Suspend application"); suspend.type = "button";
+        suspend.addEventListener("click", function () { action("suspend", reason.value.trim(), suspend); });
+        p.appendChild(suspend);
+      }
+    },
+
+    danger: function (p, a) {
+      titre(p, "Danger zone");
+      var t = el("p", "petit intro-panneau");
+      t.append(document.createTextNode(window.nxT ? window.nxT("This deletes") : "This deletes"), " ", el("strong", "", a.nom),
+        document.createTextNode(window.nxT ? window.nxT(", its keys and its members. Players signed in with it are signed out. This can't be undone.") : ", its keys and its members. Players signed in with it are signed out. This can't be undone."));
+      p.appendChild(t);
+      var b = el("button", "bouton bouton--danger", "Delete the application"); b.type = "button";
+      b.addEventListener("click", function () {
+        $("sup-nom").textContent = a.nom;
+        $("sup-saisie").value = "";
+        $("sup-ok").disabled = true;
+        $("form-supprimer").dataset.id = a.id;
+        $("form-supprimer").dataset.nom = a.nom;
+        $("dlg-supprimer").showModal();
+        $("sup-saisie").focus();
+      });
+      p.appendChild(b);
+    },
+
+    news: function (p, a) {
+      titre(p, "Switch news", "Your application's own channel in the News section of the Switch HOME Menu.");
+      var n = a.acceptations || 0;
+      var palier = function (seuil, libelle, detail) {
+        var b = el("div", "palier" + (n >= seuil ? " est-atteint" : ""));
+        var tete = el("div", "palier-tete");
+        tete.append(el("strong", "", libelle), el("span", "petit", n >= seuil ? "Unlocked" : tf("{0} / {1}", Math.min(n, seuil), seuil)));
+        var barre = el("div", "barre-progres"); var r = el("span"); r.style.width = Math.min(100, Math.round(n * 100 / seuil)) + "%"; barre.appendChild(r);
+        barre.setAttribute("role", "progressbar"); barre.setAttribute("aria-valuemin", "0"); barre.setAttribute("aria-valuemax", String(seuil)); barre.setAttribute("aria-valuenow", String(Math.min(n, seuil)));
+        b.append(tete, barre, el("p", "petit", detail));
+        return b;
+      };
+      var compte = el("p", "acceptations-grand");
+      compte.append(el("strong", "", String(n)), el("span", "", n > 1 ? "players accepted this application" : "player accepted this application"));
+      p.appendChild(compte);
+      p.appendChild(el("p", "petit", "Each player counts once, however many times they accept. You and your collaborators don't count."));
+      p.appendChild(palier(a.seuilNews, "Switch news", tf("Publish your own articles in the News section of every Switch: one article every 4 days, with “(Unofficial)” after your publisher name. Featured stays reserved for HorizonLink.")));
+      p.appendChild(palier(a.seuilBadge, "Developer badge", "A badge on the creator's profile. Collaborators don't receive it."));
+      if (a.officiel) { p.appendChild(el("p", "petit", "Official applications publish through the HorizonLink channel.")); return; }
+      var ouvrir = el("a", "bouton bouton--plein petit-bouton", n >= a.seuilNews ? "Open the news editor" : "See the news editor");
+      ouvrir.href = "/developers-news.html?app=" + encodeURIComponent(a.id);
+      var l = el("div", "ligne-boutons"); l.appendChild(ouvrir); p.appendChild(l);
+    },
+
+    testeurs: function (p, a) {
+      titre(p, "Testers and collaborators", "Members can sign in with the application before it's public, and edit it depending on their role.");
+      var ajout = el("div", "champ"); ajout.id = "collab-add-section";
+      ajout.appendChild(el("span", "", "Invite a member (by HorizonLink username)"));
+      var ligne = el("div", "ligne-copie");
+      var i = el("input"); i.placeholder = "Username"; i.setAttribute("aria-label", "HorizonLink username");
+      var inv = el("button", "bouton bouton--plein petit-bouton", "Invite"); inv.type = "button";
+      ligne.append(i, inv); ajout.appendChild(ligne); p.appendChild(ajout);
+      var entete = el("div", "entete-plaque"); entete.style.marginTop = "18px";
+      var compte = el("span", "petit");
+      entete.append(el("h3", "sous-titre", "Application members"), compte); p.appendChild(entete);
+      var ul = el("ul", "membres");
+      var dessiner = function (membres) {
+        ul.innerHTML = "";
+        compte.textContent = membres.length + (membres.length > 1 ? " members" : " member");
+        membres.forEach(function (m) {
+          var li = el("li", "membre-appli");
+          var ph = el("img"); ph.alt = "";
+          ph.onerror = function () { ph.onerror = null; ph.src = window.nxSilhouette(m.pid); };
+          ph.src = m.pid ? "/api/avatar?pid=" + m.pid : window.nxSilhouette(0);
+          var t = el("div"); t.append(el("strong", "", m.nom), el("small", "petit", m.role));
+          li.append(ph, t);
+          if (m.role !== "Owner") {
+            var x = el("button", "bouton bouton--sortie petit-bouton", "Remove"); x.type = "button";
+            x.addEventListener("click", function () {
+              NX.api("/api/developers/applications/" + encodeURIComponent(a.id) + "/collaborators/" + encodeURIComponent(m.pid), null, "DELETE").then(function () {
+                toast(m.nom + " removed");
+                chargerMembres();
+              }).catch(function (e) { toast(erreur(e)); });
+            });
+            li.appendChild(x);
+          } else li.appendChild(el("span", "badge", "Owner"));
+          ul.appendChild(li);
+        });
+      };
+      var chargerMembres = function () {
+        ul.innerHTML = "";
+        ul.appendChild(el("li", "vide-bloc", "Loading members…"));
+        NX.api("/api/developers/applications/" + encodeURIComponent(a.id) + "/collaborators", null, "GET").then(function (res) {
+          var liste = (res.collaborators || []).map(function (m) {
+            return { nom: m.username || m.name || ("PID " + m.pid), pid: m.pid, role: m.role || "Tester" };
+          });
+          if (res.owner_username || res.owner_pid) {
+            var deja = liste.some(function (m) { return m.pid && m.pid === res.owner_pid; });
+            if (!deja) liste.unshift({ nom: res.owner_username || "Owner", pid: res.owner_pid || 0, role: "Owner" });
+          }
+          brouillon.membres = liste;
+          dessiner(liste);
+        }).catch(function (e) {
+          ul.innerHTML = "";
+          ul.appendChild(el("li", "vide-bloc", "Could not load members: " + erreur(e)));
+        });
+      };
+      inv.addEventListener("click", function () {
+        var n = i.value.trim(); if (!n) return;
+        inv.disabled = true;
+        NX.api("/api/developers/applications/" + encodeURIComponent(a.id) + "/collaborators", { username: n, role: "Tester" }).then(function (res) {
+          i.value = "";
+          toast((res && res.message) || (n + " invited"));
+          chargerMembres();
+        }).catch(function (e) { toast(erreur(e)); }).then(function () { inv.disabled = false; });
+      });
+      chargerMembres();
+      p.appendChild(ul);
+    }
+  };
+
+
+  // Invitation link from the e-mail (?invitation=<token>&app_id=<id>): confirm, then join the app.
+  function invitation() {
+    var q = new URLSearchParams(location.search), jeton = q.get("invitation"), appId = q.get("app_id");
+    if (!jeton || !appId) return;
+    var d = document.createElement("dialog");
+    d.className = "dialogue";
+    d.setAttribute("aria-labelledby", "t-invitation");
+    d.innerHTML = '<div class="dialogue-corps"><h2 id="t-invitation"></h2><p></p>' +
+      '<div class="ligne-fin"><button type="button" class="bouton bouton--verre" data-ferme></button><button type="button" class="bouton bouton--plein" id="invitation-ok"></button></div></div>';
+    d.querySelector("h2").textContent = "Join this application?";
+    d.querySelector("p").textContent = tf("You were invited to join the application {0}. Accept to sign in with it before it's public.", appId);
+    d.querySelector("[data-ferme]").textContent = "Not now";
+    d.querySelector("#invitation-ok").textContent = "Accept the invitation";
+    document.body.appendChild(d);
+    var nettoyer = function () { history.replaceState(null, "", location.pathname + location.hash); d.close(); };
+    d.querySelector("[data-ferme]").addEventListener("click", nettoyer);
+    // Live: POST /api/developers/invitations/accept?token=…&app_id=… with the player's session.
+    d.querySelector("#invitation-ok").addEventListener("click", function () {
+      var btn = d.querySelector("#invitation-ok");
+      btn.disabled = true;
+      NX.api("/api/developers/invitations/accept?token=" + encodeURIComponent(jeton) + "&app_id=" + encodeURIComponent(appId), {}).then(function (res) {
+        nettoyer();
+        toast((res && res.message) || "Invitation accepted");
+        if (window.NX && NX.token) { charge().then(function () { location.hash = "#/applis"; }); }
+        else location.hash = "#/applis";
+      }).catch(function (e) { btn.disabled = false; toast(erreur(e)); });
+    });
+    d.showModal();
+  }
+
+  // Display name in the space (public landing stays anonymous).
+  if (window.NX && NX.token) {
+    NX.me().then(function (d) {
+      var acc = (d && d.account) || {};
+      moi = { pseudo: acc.username || acc.name || "Developer", pid: acc.pid || 0 };
+      if ($("dev-nom")) $("dev-nom").textContent = moi.pseudo;
+    }).catch(function () {});
+  }
+
+  window.addEventListener("hashchange", route);
+  route();
+  invitation();
+})();
